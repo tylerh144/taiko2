@@ -24,47 +24,53 @@ public class SongLoader {
         song = new ArrayList<>();
         timeVelocity = new ArrayList<>();
         try {
-            File myFile = new File("Songs/" + songName + "/hitobjects.txt");
+            File myFile = new File("Songs/" + songName + "/data.osu");
             Scanner fileScanner = new Scanner(myFile);
+
+            while (!fileScanner.nextLine().equals("[TimingPoints]")) {
+                //skip until timingpoints
+            }
+
+            boolean hit = false;
+
+            while (!hit) {
+                String data = fileScanner.nextLine();
+                if (data.isEmpty()) {
+                    hit = true;
+                } else {
+                    String[] splitData = data.split(",");
+                    double hitTime = Double.parseDouble(splitData[0]);
+                    double velocityMult = Double.parseDouble(splitData[1]);
+                    double velocity;
+                    if (velocityMult > 0) {
+                        velocity = 60000 / velocityMult;
+                    } else {
+                        velocity = timeVelocity.getFirst()[1] * (-100 / velocityMult);
+                    }
+
+                    timeVelocity.add(new Double[]{hitTime, velocity});
+                }
+            }
+
+            fileScanner.nextLine();
+            fileScanner.nextLine();
+
             while (fileScanner.hasNext()) {
                 String data = fileScanner.nextLine();
                 String[] splitData = data.split(",");
                 double hitTime = Double.parseDouble(splitData[2]);
                 int color = Integer.parseInt(splitData[4]);
-                Note n = new Note(hitTime, color);
+                double velocity = 0;
+                for (Double[] array : timeVelocity) {
+                    if (hitTime >= array[0]) {
+                        velocity = array[1];
+                    }
+                }
+                Note n = new Note(hitTime, color, velocity);
                 song.add(n);
             }
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
-        }
-
-        try {
-            File myFile = new File("Songs/" + songName + "/timingpoints.txt");
-            Scanner fileScanner = new Scanner(myFile);
-            while (fileScanner.hasNext()) {
-                String data = fileScanner.nextLine();
-                String[] splitData = data.split(",");
-                double hitTime = Double.parseDouble(splitData[0]);
-                double velocityMult = Double.parseDouble(splitData[1]);
-                double velocity = 0;
-                if (velocityMult > 0) {
-                    velocity = 60000/velocityMult;
-                } else {
-                    velocity = timeVelocity.getFirst()[1] * (-100 / velocityMult);
-                }
-
-                timeVelocity.add(new Double[]{hitTime, velocity});
-            }
-        } catch (IOException exception) {
-            System.out.println(exception.getMessage());
-        }
-
-        for (Double[] array : timeVelocity) {
-            for (Note n : song) {
-                if (n.getHitTime() >= array[0]) {
-                    n.setVelocity(array[1]);
-                }
-            }
         }
     }
 

@@ -5,9 +5,9 @@ public class Note {
     private double hitTime;
     private double spawnTime;
 
-    public Note(double hitTime, int color) {
+    public Note(double hitTime, int color, double velocity) {
         this.hitTime = hitTime;
-        this.velocity = 0;
+        this.velocity = velocity;
         this.spawnTime = 0;
         if (color == 0) {
             this.color = 0;
