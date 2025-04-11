@@ -17,6 +17,9 @@ public class SongLoader {
         return song;
     }
 
+    //get image
+    //get audio
+
     private void parseData(String songName) {
         song = new ArrayList<>();
         timeVelocity = new ArrayList<>();
