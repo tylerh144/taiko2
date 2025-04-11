@@ -12,14 +12,16 @@ public class SongLoader {
         timeVelocity = new ArrayList<>();
     }
 
-    public ArrayList<Note> getSong() {
-        parseData();
+    public ArrayList<Note> getSong(String songName) {
+        parseData(songName);
         return song;
     }
 
-    private void parseData() {
+    private void parseData(String songName) {
+        song = new ArrayList<>();
+        timeVelocity = new ArrayList<>();
         try {
-            File myFile = new File("Songs/DNA/hitobjects.txt");
+            File myFile = new File("Songs/" + songName + "/hitobjects.txt");
             Scanner fileScanner = new Scanner(myFile);
             while (fileScanner.hasNext()) {
                 String data = fileScanner.nextLine();
@@ -34,7 +36,7 @@ public class SongLoader {
         }
 
         try {
-            File myFile = new File("Songs/DNA/timingpoints.txt");
+            File myFile = new File("Songs/" + songName + "/timingpoints.txt");
             Scanner fileScanner = new Scanner(myFile);
             while (fileScanner.hasNext()) {
                 String data = fileScanner.nextLine();
