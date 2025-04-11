@@ -4,5 +4,6 @@ public class Main {
         for (Note n : test.getSong("bus")) {
             System.out.println(n);
         }
+        SampleFrame frame = new SampleFrame();
     }
 }
