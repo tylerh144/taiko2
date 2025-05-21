@@ -3,12 +3,12 @@ public class Note {
     private double velocity;
     private boolean big;
     private double hitTime;
-    private double spawnTime;
+    private int xPos;
 
     public Note(double hitTime, int color, double velocity) {
         this.hitTime = hitTime;
         this.velocity = velocity;
-        this.spawnTime = 0;
+        xPos = 1000;
         if (color == 0) {
             this.color = 0;
             big = false;
@@ -28,13 +28,29 @@ public class Note {
         return hitTime;
     }
 
+    public double getSpawnTime() {
+        return (int) (hitTime - 100 / (120 * velocity));
+    }
+
     public double getVelocity() {
         return velocity;
     }
 
-    public void setVelocity(double velocity) {
-        this.velocity = velocity;
-        spawnTime = 0;
+//    public void setVelocity(double velocity) {
+//        this.velocity = velocity;
+//    }
+
+    public int getxPos() {
+        return xPos;
+    }
+
+    public int getColor() {
+        return color;
+    }
+
+    //change mult
+    public void move() {
+        xPos -= (int) (velocity * .1);
     }
 
     @Override
