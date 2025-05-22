@@ -26,8 +26,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
     public DisplayPanel() {
 
-        // UPDATE timer to be 10ms, which will now trigger 100 times per second
-        timer = new Timer(0, this);
+        timer = new Timer(1, this);
         curTime = 0;
 
         isMenu = false;
@@ -40,7 +39,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
 
         load = new SongLoader();
-        song = load.getSong("override");
+        song = load.getSong("DNA");
 
         currentNote = null;
         perf = 0;
@@ -71,7 +70,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
             for (int i = song.size() - 1; i >= 0; i--) {
                 Note n = song.get(i);
-                if (curTime >= n.getSpawnTime() && curTime <= n.getHitTime() + 1000) {
+                //add 200ms for real
+                if (curTime >= n.getSpawnTime() && curTime <= n.getHitTime()) {
                     if (n.getColor() == 0) {
                         g.setColor(Color.RED);
                     } else {

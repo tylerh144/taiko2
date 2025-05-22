@@ -28,17 +28,14 @@ public class Note {
         return hitTime;
     }
 
+    //fix time on high bpms
     public double getSpawnTime() {
-        return hitTime - 1000.0 / velocity;
+        return hitTime - 10000.0 / velocity;
     }
 
     public double getVelocity() {
         return velocity;
     }
-
-//    public void setVelocity(double velocity) {
-//        this.velocity = velocity;
-//    }
 
     public double getxPos() {
         return xPos;
@@ -49,7 +46,6 @@ public class Note {
     }
 
     //change mult
-    //fix mult on high bpms
     public void move() {
         xPos -= velocity * .08;
     }
