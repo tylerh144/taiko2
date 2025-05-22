@@ -39,7 +39,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
 
         load = new SongLoader();
-        song = load.getSong("DNA");
+        song = load.getSong("override");
 
         currentNote = null;
         perf = 0;
@@ -63,10 +63,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         Graphics2D g2d = (Graphics2D) g;
 
         if (!isMenu) {
-            g.setColor(Color.BLACK);
-            g.fillRect(0, 200, 1000, 150);
-            g.setFont(new Font("Arial", Font.BOLD, 16));
-            g.drawString("" + curTime, 100, 100);
+            drawLane(g);
 
             for (int i = song.size() - 1; i >= 0; i--) {
                 Note n = song.get(i);
@@ -79,10 +76,12 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                     }
 
                     //draw note
-                    g.fillOval((int) Math.round(n.getxPos()), 250, 50, 50);
-                    g.setColor(Color.WHITE);
-                    g2d.setStroke(new BasicStroke(2));
-                    g2d.drawOval((int) Math.round(n.getxPos()), 250, 50, 50);
+                    if (n.isBig()) {
+                        g2d.drawImage(n.getImg(), (int) n.getxPos() - 19, 224, null);
+                    } else {
+                        g2d.drawImage(n.getImg(), (int) n.getxPos(), 243, null);
+
+                    }
                     n.move();
                 }
             }
@@ -154,8 +153,51 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof Timer) {
-            curTime+=15.55;
+            curTime+=10; //15.55 pc, 10 school
             repaint();
         }
+    }
+
+    private void drawLane(Graphics g) {
+        //note lane
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 200, 1000, 150);
+        g.setFont(new Font("Arial", Font.BOLD, 16)); //temp
+        g.drawString("" + curTime, 100, 100);
+
+        //square with drum
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(0, 200, 150, 150);
+        if (k1Down) {
+            g.setColor(Color.BLUE);
+        } else {
+            g.setColor(Color.DARK_GRAY);
+        }
+        g.fillArc(25, 225, 100, 100, 90, 180);
+        if (k2Down) {
+            g.setColor(Color.BLUE);
+        } else {
+            g.setColor(Color.DARK_GRAY);
+        }
+        g.fillArc(25, 225, 100, 100, 270, 180);
+        if (d1Down) {
+            g.setColor(Color.RED);
+        } else {
+            g.setColor(Color.DARK_GRAY);
+        }
+        g.fillArc(38, 238, 74, 74, 90, 180);
+        if (d2Down) {
+            g.setColor(Color.RED);
+        } else {
+            g.setColor(Color.DARK_GRAY);
+        }
+        g.fillArc(38, 238, 74, 74, 270, 180);
+        g.setColor(Color.BLACK);
+        g.drawOval(25, 225, 100, 100);
+        g.drawOval(38, 238, 74, 74);
+        g.drawLine(75, 225, 75, 325);
+
+        g.setColor(Color.WHITE);
+        g.drawOval(200, 243, 64, 64);
     }
 }

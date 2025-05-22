@@ -1,26 +1,56 @@
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
 public class Note {
     private int color;
     private double velocity;
     private boolean big;
     private double hitTime;
     private double xPos;
+    private BufferedImage img;
 
     public Note(double hitTime, int color, double velocity) {
         this.hitTime = hitTime;
         this.velocity = velocity;
-        xPos = 1000;
+        if (hitTime % 10 != 0) {
+            xPos = 1000 - (10 - (hitTime % 10)) * velocity * 0.001 ;
+        } else {
+            xPos = 1000;
+        }
         if (color == 0) {
             this.color = 0;
             big = false;
+            try {
+                img = ImageIO.read(new File("Assets/don.png"));
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
         } else if (color == 8) {
             this.color = 1;
             big = false;
+            try {
+                img = ImageIO.read(new File("Assets/ka.png"));
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
         } else if (color == 4) {
             this.color = 0;
             big = true;
+            try {
+                img = ImageIO.read(new File("Assets/don_b.png"));
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
         } else if (color == 12) {
             this.color = 1;
             big = true;
+            try {
+                img = ImageIO.read(new File("Assets/ka_b.png"));
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
         }
     }
 
@@ -30,7 +60,7 @@ public class Note {
 
     //fix time on high bpms
     public double getSpawnTime() {
-        return hitTime - 10000.0 / velocity;
+        return hitTime - 160000.0 / velocity;
     }
 
     public double getVelocity() {
@@ -45,9 +75,17 @@ public class Note {
         return color;
     }
 
+    public boolean isBig() {
+        return big;
+    }
+
+    public BufferedImage getImg() {
+        return img;
+    }
+
     //change mult
     public void move() {
-        xPos -= velocity * .08;
+        xPos -= velocity * .05;
     }
 
     @Override
