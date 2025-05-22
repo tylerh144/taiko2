@@ -12,15 +12,14 @@ import java.util.ArrayList;
 
 public class DisplayPanel extends JPanel implements KeyListener, MouseListener, ActionListener {
     private Timer timer;
-    private int curTime;
+    private double curTime;
     private boolean isMenu;
     private boolean d1Down, d2Down, k1Down, k2Down;
-    private ArrayList<Note> activeNotes, song;
+    private ArrayList<Note> song;
     private Note currentNote;
     private int perf, good, miss;
     private double accuracy;
     private SongLoader load;
-    private int counter;
 
 
     private String message;
@@ -28,7 +27,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     public DisplayPanel() {
 
         // UPDATE timer to be 10ms, which will now trigger 100 times per second
-        timer = new Timer(10, this);
+        timer = new Timer(0, this);
         curTime = 0;
 
         isMenu = false;
@@ -40,24 +39,14 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
 
 
-        song = new ArrayList<>();
         load = new SongLoader();
-        song = load.getSong("phony");
-        activeNotes = new ArrayList<>();
-
-        for (Note n : song) {
-            if (n.getSpawnTime() == 0) {
-                activeNotes.add(n);
-            }
-        }
+        song = load.getSong("override");
 
         currentNote = null;
         perf = 0;
         good = 0;
         miss = 0;
         accuracy = 0;
-
-        counter = 0;
 
         message = "";
 
@@ -80,12 +69,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.setFont(new Font("Arial", Font.BOLD, 16));
             g.drawString("" + curTime, 100, 100);
 
-            for (int i = activeNotes.size() - 1; i >= 0; i--) {
-                Note n = activeNotes.get(i);
-//                if (n.getHitTime() < curTime + 200) {
-//                    activeNotes.remove(i);
-//                    i++;
-//                } else {
+            for (int i = song.size() - 1; i >= 0; i--) {
+                Note n = song.get(i);
+                if (curTime >= n.getSpawnTime() && curTime <= n.getHitTime() + 1000) {
                     if (n.getColor() == 0) {
                         g.setColor(Color.RED);
                     } else {
@@ -93,17 +79,15 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                     }
 
                     //draw note
-                    g.fillOval(n.getxPos(), 250, 50, 50);
+                    g.fillOval((int) Math.round(n.getxPos()), 250, 50, 50);
                     g.setColor(Color.WHITE);
                     g2d.setStroke(new BasicStroke(2));
-                    g2d.drawOval(n.getxPos(), 250, 50, 50);
+                    g2d.drawOval((int) Math.round(n.getxPos()), 250, 50, 50);
                     n.move();
-//                }
+                }
             }
         }
 
-        g.setFont(new Font("Arial", Font.BOLD, 12));
-        g2d.setColor(Color.BLACK);
         g2d.drawString(message, 120, 150);
     }
 
@@ -170,12 +154,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof Timer) {
-            curTime+=1;
-            if (counter < song.size() && song.get(counter).getSpawnTime() >= curTime) {
-                activeNotes.add(song.get(counter));
-                counter++;
-            }
-
+            curTime+=15.55;
             repaint();
         }
     }

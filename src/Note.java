@@ -3,7 +3,7 @@ public class Note {
     private double velocity;
     private boolean big;
     private double hitTime;
-    private int xPos;
+    private double xPos;
 
     public Note(double hitTime, int color, double velocity) {
         this.hitTime = hitTime;
@@ -29,7 +29,7 @@ public class Note {
     }
 
     public double getSpawnTime() {
-        return (int) (hitTime - 100 / (120 * velocity));
+        return hitTime - 1000.0 / velocity;
     }
 
     public double getVelocity() {
@@ -40,7 +40,7 @@ public class Note {
 //        this.velocity = velocity;
 //    }
 
-    public int getxPos() {
+    public double getxPos() {
         return xPos;
     }
 
@@ -49,8 +49,9 @@ public class Note {
     }
 
     //change mult
+    //fix mult on high bpms
     public void move() {
-        xPos -= (int) (velocity * .1);
+        xPos -= velocity * .08;
     }
 
     @Override
