@@ -10,6 +10,7 @@ public class Note {
     private double hitTime;
     private double xPos;
     private BufferedImage img;
+    private BufferedImage img1;
 
     public Note(double hitTime, int color, double velocity) {
         this.hitTime = hitTime;
@@ -24,6 +25,7 @@ public class Note {
             big = false;
             try {
                 img = ImageIO.read(new File("Assets/don.png"));
+                img1 = ImageIO.read(new File("Assets/don1.png"));
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
@@ -32,6 +34,7 @@ public class Note {
             big = false;
             try {
                 img = ImageIO.read(new File("Assets/ka.png"));
+                img1 = ImageIO.read(new File("Assets/ka1.png"));
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
@@ -40,6 +43,7 @@ public class Note {
             big = true;
             try {
                 img = ImageIO.read(new File("Assets/don_b.png"));
+                img1 = ImageIO.read(new File("Assets/don_b1.png"));
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
@@ -48,6 +52,7 @@ public class Note {
             big = true;
             try {
                 img = ImageIO.read(new File("Assets/ka_b.png"));
+                img1 = ImageIO.read(new File("Assets/ka_b1.png"));
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
@@ -79,8 +84,12 @@ public class Note {
         return big;
     }
 
-    public BufferedImage getImg() {
-        return img;
+    public BufferedImage getImg(boolean first) {
+        if (first) {
+            return img;
+        } else {
+            return img1;
+        }
     }
 
     //change mult

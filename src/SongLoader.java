@@ -1,3 +1,5 @@
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
@@ -6,6 +8,7 @@ import java.util.ArrayList;
 public class SongLoader {
     private ArrayList<Note> song;
     private ArrayList<Double[]> timeVelocity;
+    private BufferedImage bg;
 
     public SongLoader () {
         song = new ArrayList<>();
@@ -14,7 +17,16 @@ public class SongLoader {
 
     public ArrayList<Note> getSong(String songName) {
         parseData(songName);
+        try {
+            bg = ImageIO.read(new File("Songs/" + songName + "/bg.jpg"));
+        } catch (IOException e) {
+        System.out.println(e.getMessage());
+    }
         return song;
+    }
+
+    public BufferedImage getBg() {
+        return bg;
     }
 
     //get image
