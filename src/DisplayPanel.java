@@ -63,7 +63,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         if (!isMenu) {
             drawLane(g);
-
+            calcAcc();
 
             if (!song.isEmpty()) {
                 currentNote = song.getFirst();
@@ -102,6 +102,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     public void keyTyped(KeyEvent e) { }
 
     @Override
+    //FIX TIME DILATION WHEN HOLDING DOWN KEYS
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
         if (key == KeyEvent.VK_F) {
@@ -193,31 +194,33 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.drawString("Perfect: " + perf, 50, 25);
         g.drawString("Good: " + good, 50, 50);
         g.drawString("Miss: " + miss, 50, 75);
-        g.drawString("Accuracy: " + accuracy, 200, 25);
+        g.drawString("Accuracy: " + accuracy + "%", 200, 25);
 
         //square with drum
+        Color blue = Color.decode("#32b0be");
+        Color red = Color.decode("#f9472d");
         g.setColor(Color.DARK_GRAY);
         g.fillRect(0, 100, 150, 150);
         if (k1Down) {
-            g.setColor(Color.BLUE);
+            g.setColor(blue);
         } else {
             g.setColor(Color.DARK_GRAY);
         }
         g.fillArc(25, 125, 100, 100, 90, 180);
         if (k2Down) {
-            g.setColor(Color.BLUE);
+            g.setColor(blue);
         } else {
             g.setColor(Color.DARK_GRAY);
         }
         g.fillArc(25, 125, 100, 100, 270, 180);
         if (d1Down) {
-            g.setColor(Color.RED);
+            g.setColor(red);
         } else {
             g.setColor(Color.DARK_GRAY);
         }
         g.fillArc(38, 138, 74, 74, 90, 180);
         if (d2Down) {
-            g.setColor(Color.RED);
+            g.setColor(red);
         } else {
             g.setColor(Color.DARK_GRAY);
         }
@@ -236,21 +239,26 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         double curHit = currentNote.getHitTime();
         int noteColor = currentNote.getColor();
         if (keyColor == noteColor) {
-            if (curHit < curTime + 60 && curHit > curTime - 60) {
+            if (curHit < curTime + 50 && curHit > curTime - 50) {
                 perf++;
                 song.removeFirst();
                 currentNote = song.getFirst();
-            } else if (curHit < curTime + 150 && curHit > curTime - 100) {
+            } else if (curHit < curTime + 100 && curHit > curTime - 100) {
                 good++;
                 song.removeFirst();
                 currentNote = song.getFirst();
             }
-        } else if (curHit < curTime + 150 && curHit > curTime - 100) {
+        } else if (curHit < curTime + 100 && curHit > curTime - 100) {
             miss++;
             song.removeFirst();
             currentNote = song.getFirst();
         }
+    }
 
-
+    private void calcAcc() {
+        double sumHit = perf + good * 2/3.0;
+        double sumAll = perf + good + miss;
+        accuracy = sumHit / sumAll * 10000;
+        accuracy = Math.round(accuracy) / 100.0;
     }
 }

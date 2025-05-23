@@ -15,8 +15,9 @@ public class Note {
     public Note(double hitTime, int color, double velocity) {
         this.hitTime = hitTime;
         this.velocity = velocity;
-        if (hitTime % 10 != 0) {
-            xPos = 1000 - (10 - (hitTime % 10)) * velocity * 0.001 ;
+        if (getSpawnTime() % 10 != 0) {
+            //maybe correct?????????????
+            xPos = 1000 - (10 - (getSpawnTime() % 10)) * velocity * 0.0048 ;
         } else {
             xPos = 1000;
         }
@@ -94,7 +95,7 @@ public class Note {
 
     //change mult
     public void move() {
-        xPos -= velocity * .05;
+        xPos -= velocity * .048;
     }
 
     @Override
