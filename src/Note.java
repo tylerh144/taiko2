@@ -16,11 +16,11 @@ public class Note {
         this.hitTime = hitTime;
         this.velocity = velocity;
         if (getSpawnTime() % 10 != 0) {
-            //maybe correct?????????????
-            xPos = 1000 - (10 - (getSpawnTime() % 10)) * velocity * 0.005 ;
+            xPos = 1000 - (10 - (getSpawnTime() % 10)) * velocity * 0.005 / 1.4 ;
         } else {
             xPos = 1000;
         }
+
         if (color == 0) {
             this.color = 0;
             big = false;
@@ -57,6 +57,17 @@ public class Note {
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
+        } else {
+            //maybe remove spinners and sliders??????
+            this.color = -1;
+            big = true;
+            //color = endhittime
+            try {
+                img = ImageIO.read(new File("Assets/spinner-warning.png"));
+                img1 = img;
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
         }
     }
 
@@ -66,7 +77,7 @@ public class Note {
 
     //fix time on high bpms
     public double getSpawnTime() {
-        return hitTime - 160000.0 / velocity;
+        return hitTime - 224000.0 / velocity;
     }
 
     public double getVelocity() {
@@ -95,7 +106,7 @@ public class Note {
 
     //change mult
     public void move() {
-        xPos -= velocity * .05;
+        xPos -= velocity * .05 / 1.4;
     }
 
     @Override

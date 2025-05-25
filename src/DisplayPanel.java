@@ -23,7 +23,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     public DisplayPanel() {
 
         timer = new Timer(1, this);
-        curTime = 0;
+        curTime = -1000; //bus: 878000, override,shunran:-1000
 
         isMenu = false;
 
@@ -35,7 +35,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
 
         load = new SongLoader();
-        song = load.getSong("DNA");
+        song = load.getSong("shunran");
 
         currentNote = null;
         perf = 0;
@@ -75,15 +75,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                         miss++;
                         i++;
                     } else if (curTime >= n.getSpawnTime()) {
-                        if (n.getColor() == 0) {
-                            g.setColor(Color.RED);
-                        } else {
-                            g.setColor(Color.BLUE);
-                        }
+
                         if (n.isBig()) {
-                            g2d.drawImage(n.getImg(close), (int) n.getxPos() - 19, 124, null);
+                            g2d.drawImage(n.getImg(close), (int) n.getxPos() - 19, 124, 106, 106, null);
                         } else {
-                            g2d.drawImage(n.getImg(close), (int) n.getxPos(), 143, null);
+                            g2d.drawImage(n.getImg(close), (int) n.getxPos(), 143, 64, 64, null);
 
                         }
                         n.move();
