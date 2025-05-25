@@ -130,8 +130,6 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 hit(1);
             }
         }
-
-        repaint();
     }
 
     @Override

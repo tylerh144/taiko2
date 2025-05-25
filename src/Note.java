@@ -17,7 +17,7 @@ public class Note {
         this.velocity = velocity;
         if (getSpawnTime() % 10 != 0) {
             //maybe correct?????????????
-            xPos = 1000 - (10 - (getSpawnTime() % 10)) * velocity * 0.0048 ;
+            xPos = 1000 - (10 - (getSpawnTime() % 10)) * velocity * 0.005 ;
         } else {
             xPos = 1000;
         }
@@ -95,7 +95,7 @@ public class Note {
 
     //change mult
     public void move() {
-        xPos -= velocity * .048;
+        xPos -= velocity * .05;
     }
 
     @Override
