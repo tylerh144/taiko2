@@ -12,11 +12,11 @@ public class Note {
     private BufferedImage img;
     private BufferedImage img1;
 
-    public Note(double hitTime, int color, double velocity) {
+    public Note(double hitTime, int color, double velocity, double gameTick) {
         this.hitTime = hitTime;
         this.velocity = velocity;
-        if (getSpawnTime() % 10 != 0) {
-            xPos = 1000 - (10 - (getSpawnTime() % 10)) * velocity * 0.005 / 1.4 ;
+        if (getSpawnTime() % gameTick != 0) {
+            xPos = 1000 - (gameTick - (getSpawnTime() % gameTick)) * velocity * 0.005 / 1.4 ;
         } else {
             xPos = 1000;
         }
@@ -105,8 +105,8 @@ public class Note {
     }
 
     //change mult
-    public void move() {
-        xPos -= velocity * .05 / 1.4;
+    public void move(double gameTick) {
+        xPos -= velocity * gameTick * .005 / 1.4;
     }
 
     @Override

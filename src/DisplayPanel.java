@@ -16,6 +16,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private SongLoader load;
     private boolean close;
     private int animCount, d1Count, d2Count, k1Count, k2Count;
+    private final double GAME_TICK = 15.5;
 
 
     private String message;
@@ -23,19 +24,15 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     public DisplayPanel() {
 
         timer = new Timer(1, this);
-        curTime = -1000; //bus: 878000, override,shunran:-1000
+        curTime = ((int) (-1000 / GAME_TICK)) * GAME_TICK; //bus: 878000, override,shunran:-1000
+        load = new SongLoader(GAME_TICK);
+        song = load.getSong("shunran");
 
         isMenu = false;
-
         d1Down = false;
         d2Down = false;
         k1Down = false;
         k2Down = false;
-
-
-
-        load = new SongLoader();
-        song = load.getSong("shunran");
 
         currentNote = null;
         perf = 0;
@@ -82,10 +79,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                             g2d.drawImage(n.getImg(close), (int) n.getxPos(), 143, 64, 64, null);
 
                         }
-                        n.move();
+                        n.move(GAME_TICK);
                     }
                 }
             }
+            drawDrum(g);
 //            else {
 //                timer.stop();
 //            }
@@ -160,7 +158,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof Timer) {
-            curTime+=10; //15.55 pc, 10 school
+            curTime+= GAME_TICK; //15.55 pc, 10 school
             animCount++;
             if (animCount == 20) {
                 close = !close;
@@ -171,17 +169,19 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     }
 
     private void drawLane(Graphics g) {
-        //note lane
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 100, 1000, 150);
-
+        //bg img
         Graphics2D g2d = (Graphics2D) g;
-        g2d.drawImage(load.getBg(), 0, 250, 1000, 325,  null);
+        g2d.drawImage(load.getBg(), 0, 140, 1000, (int) (1000 * load.getBgRatio()),  null);
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .8f));
         g.setColor(Color.BLACK);
         g2d.fillRect(0, 250, 1000, 325);
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 
+        //note lane
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 100, 1000, 150);
+
+        //stats
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 16)); //temp
         g.drawString("" + curTime, 200, 50);
@@ -190,7 +190,13 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.drawString("Miss: " + miss, 50, 75);
         g.drawString("Accuracy: " + accuracy + "%", 200, 25);
 
-        //square with drum
+        //hit indicator
+        g.setColor(Color.WHITE);
+        g.drawOval(200, 143, 64, 64);
+        g.drawRect(0, 100, 1000, 150);
+    }
+
+    private void drawDrum( Graphics g) {
         Color blue = Color.decode("#32b0be");
         Color red = Color.decode("#f9472d");
         g.setColor(Color.DARK_GRAY);
@@ -223,10 +229,6 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.drawOval(25, 125, 100, 100);
         g.drawOval(38, 138, 74, 74);
         g.drawLine(75, 125, 75, 225);
-
-        g.setColor(Color.WHITE);
-        g.drawOval(200, 143, 64, 64);
-        g.drawRect(0, 100, 1000, 150);
     }
 
     private void hit(int keyColor) {

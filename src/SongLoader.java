@@ -10,10 +10,12 @@ public class SongLoader {
     private ArrayList<Double[]> timeVelocity;
     private BufferedImage bg;
     private double sliderMult;
+    private double gameTick;
 
-    public SongLoader () {
+    public SongLoader (double gt) {
         song = new ArrayList<>();
         timeVelocity = new ArrayList<>();
+        gameTick = gt;
     }
 
     public ArrayList<Note> getSong(String songName) {
@@ -28,6 +30,10 @@ public class SongLoader {
 
     public BufferedImage getBg() {
         return bg;
+    }
+
+    public double getBgRatio() {
+        return (double) bg.getHeight() / bg.getWidth();
     }
 
     //get image
@@ -93,7 +99,7 @@ public class SongLoader {
                         velocity = array[1];
                     }
                 }
-                Note n = new Note(hitTime, color, velocity);
+                Note n = new Note(hitTime, color, velocity, gameTick);
                 song.add(n);
             }
         } catch (IOException exception) {
