@@ -8,15 +8,17 @@ public class Note {
     private double velocity;
     private boolean big;
     private double hitTime;
+    private double spawnTime;
     private double xPos;
     private BufferedImage img;
     private BufferedImage img1;
 
     public Note(double hitTime, int color, double velocity, double gameTick) {
         this.hitTime = hitTime;
-        this.velocity = velocity;
+        spawnTime = hitTime - 224000.0 / velocity;
+        this.velocity = velocity * gameTick * .005 / 1.4;
         if (getSpawnTime() % gameTick != 0) {
-            xPos = 1000 - (gameTick - (getSpawnTime() % gameTick)) * velocity * 0.005 / 1.4 ;
+            xPos = 1000 - (gameTick - (spawnTime % gameTick)) * velocity * 0.005 / 1.4 ;
         } else {
             xPos = 1000;
         }
@@ -77,7 +79,7 @@ public class Note {
 
     //fix time on high bpms
     public double getSpawnTime() {
-        return hitTime - 224000.0 / velocity;
+        return spawnTime;
     }
 
     public double getVelocity() {
@@ -105,8 +107,8 @@ public class Note {
     }
 
     //change mult
-    public void move(double gameTick) {
-        xPos -= velocity * gameTick * .005 / 1.4;
+    public void move() {
+        xPos -= velocity;
     }
 
     @Override

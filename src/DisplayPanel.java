@@ -1,7 +1,11 @@
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.util.ArrayList;
 
 public class DisplayPanel extends JPanel implements KeyListener, MouseListener, ActionListener {
@@ -11,13 +15,13 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private boolean d1Down, d2Down, k1Down, k2Down;
     private ArrayList<Note> song;
     private Note currentNote;
-    private int perf, good, miss;
+    private int perf, good, miss, combo, maxCombo;
     private double accuracy;
     private SongLoader load;
     private boolean close;
     private int animCount, d1Count, d2Count, k1Count, k2Count;
-    private final double GAME_TICK = 15.5;
-
+    private final double GAME_TICK = 10.54;
+    private Clip audio;
 
     private String message;
 
@@ -26,7 +30,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         timer = new Timer(1, this);
         curTime = ((int) (-1000 / GAME_TICK)) * GAME_TICK; //bus: 878000, override,shunran:-1000
         load = new SongLoader(GAME_TICK);
-        song = load.getSong("shunran");
+        song = load.getSong("DNA");
+        loadMusic();
 
         isMenu = false;
         d1Down = false;
@@ -38,6 +43,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         perf = 0;
         good = 0;
         miss = 0;
+        combo = 0;
+        maxCombo = 0;
         accuracy = 0;
 
         animCount = 0;
@@ -70,6 +77,10 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                     if (n.getHitTime() < curTime - 100) {
                         song.remove(i);
                         miss++;
+                        if (combo > maxCombo) {
+                            maxCombo = combo;
+                        }
+                        combo = 0;
                         i++;
                     } else if (curTime >= n.getSpawnTime()) {
 
@@ -79,7 +90,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                             g2d.drawImage(n.getImg(close), (int) n.getxPos(), 143, 64, 64, null);
 
                         }
-                        n.move(GAME_TICK);
+                        n.move();
                     }
                 }
             }
@@ -158,7 +169,10 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof Timer) {
-            curTime+= GAME_TICK; //15.55 pc, 10 school
+            curTime+= GAME_TICK;
+            if (curTime > 0 && !audio.isActive()) {
+                audio.start();
+            }
             animCount++;
             if (animCount == 20) {
                 close = !close;
@@ -184,11 +198,12 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         //stats
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 16)); //temp
-        g.drawString("" + curTime, 200, 50);
         g.drawString("Perfect: " + perf, 50, 25);
         g.drawString("Good: " + good, 50, 50);
         g.drawString("Miss: " + miss, 50, 75);
         g.drawString("Accuracy: " + accuracy + "%", 200, 25);
+        g.drawString("Max Combo: " + maxCombo, 200, 50);
+        g.drawString("Current Time: " + curTime, 200, 75);
 
         //hit indicator
         g.setColor(Color.WHITE);
@@ -229,6 +244,18 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.drawOval(25, 125, 100, 100);
         g.drawOval(38, 138, 74, 74);
         g.drawLine(75, 125, 75, 225);
+
+        g.setFont(new Font("Arial", Font.BOLD, 30));
+        g.setColor(Color.WHITE);
+        int comboX = 65;
+        if (combo / 1000 > 0) {
+            comboX = 42;
+        } else if (combo / 100 > 0) {
+            comboX = 52;
+        } else if (combo / 10 > 0) {
+            comboX = 60;
+        }
+        g.drawString("" + combo, comboX, 185);
     }
 
     private void hit(int keyColor) {
@@ -237,17 +264,45 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         if (keyColor == noteColor) {
             if (curHit < curTime + 50 && curHit > curTime - 50) {
                 perf++;
+                combo++;
                 song.removeFirst();
-                currentNote = song.getFirst();
+                if (!song.isEmpty()) {
+                    currentNote = song.getFirst();
+                }
             } else if (curHit < curTime + 100 && curHit > curTime - 100) {
                 good++;
+                combo++;
                 song.removeFirst();
-                currentNote = song.getFirst();
+                if (!song.isEmpty()) {
+                    currentNote = song.getFirst();
+                }
             }
         } else if (curHit < curTime + 100 && curHit > curTime - 100) {
             miss++;
+            combo = 0;
             song.removeFirst();
-            currentNote = song.getFirst();
+            if (!song.isEmpty()) {
+                currentNote = song.getFirst();
+            }
+        }
+        if (combo > maxCombo) {
+            maxCombo = combo;
+        }
+
+        String path = "";
+        if (keyColor == 0) {
+            path = "Assets/sound_don.wav";
+        } else if (keyColor == 1) {
+            path = "Assets/sound_ka.wav";
+        }
+        File audioFile = new File(path);
+        try {
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            clip.start();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -256,5 +311,16 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         double sumAll = perf + good + miss;
         accuracy = sumHit / sumAll * 10000;
         accuracy = Math.round(accuracy) / 100.0;
+    }
+
+    private void loadMusic() {
+        File audioFile = new File(load.getAudioPath());
+        try {
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+            audio = AudioSystem.getClip();
+            audio.open(audioStream);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 }

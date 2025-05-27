@@ -9,6 +9,7 @@ public class SongLoader {
     private ArrayList<Note> song;
     private ArrayList<Double[]> timeVelocity;
     private BufferedImage bg;
+    private String audioPath;
     private double sliderMult;
     private double gameTick;
 
@@ -20,6 +21,7 @@ public class SongLoader {
 
     public ArrayList<Note> getSong(String songName) {
         parseData(songName);
+        audioPath = "Songs/" + songName + "/audio.wav";
         try {
             bg = ImageIO.read(new File("Songs/" + songName + "/bg.jpg"));
         } catch (IOException e) {
@@ -34,6 +36,10 @@ public class SongLoader {
 
     public double getBgRatio() {
         return (double) bg.getHeight() / bg.getWidth();
+    }
+
+    public String getAudioPath() {
+        return audioPath;
     }
 
     //get image
