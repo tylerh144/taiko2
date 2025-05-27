@@ -20,7 +20,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private SongLoader load;
     private boolean close;
     private int animCount, d1Count, d2Count, k1Count, k2Count;
-    private final double GAME_TICK = 10.54;
+    private final double GAME_TICK = 15.53; //school: 10.54, home:
     private Clip audio;
 
     private String message;
@@ -28,9 +28,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     public DisplayPanel() {
 
         timer = new Timer(1, this);
-        curTime = ((int) (-1000 / GAME_TICK)) * GAME_TICK; //bus: 878000, override,shunran:-1000
+        curTime = ((int) (-2000 / GAME_TICK)) * GAME_TICK; //bus: 878000, override,shunran:-2000
         load = new SongLoader(GAME_TICK);
-        song = load.getSong("DNA");
+        song = load.getSong("override");
         loadMusic();
 
         isMenu = false;
@@ -81,6 +81,17 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                             maxCombo = combo;
                         }
                         combo = 0;
+//MAYBE ADD ANOTHER MISS SOUND
+                        File audioFile = new File("Assets/sound_combobreak.wav");
+                        try {
+                            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+                            Clip clip = AudioSystem.getClip();
+                            clip.open(audioStream);
+                            clip.start();
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
+
                         i++;
                     } else if (curTime >= n.getSpawnTime()) {
 
@@ -283,6 +294,16 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             song.removeFirst();
             if (!song.isEmpty()) {
                 currentNote = song.getFirst();
+            }
+
+            File audioFile = new File("Assets/sound_combobreak.wav");
+            try {
+                AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+                Clip clip = AudioSystem.getClip();
+                clip.open(audioStream);
+                clip.start();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
         }
         if (combo > maxCombo) {
