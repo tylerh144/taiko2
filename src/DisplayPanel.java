@@ -20,7 +20,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private SongLoader load;
     private boolean close;
     private int animCount, d1Count, d2Count, k1Count, k2Count;
-    private final double GAME_TICK = 15.53; //school: 10.54, home:
+    private final double GAME_TICK = 15.5; //school: 10.54, home: 15.50-.54
     private Clip audio;
 
     private String message;
@@ -30,7 +30,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         timer = new Timer(1, this);
         curTime = ((int) (-2000 / GAME_TICK)) * GAME_TICK; //bus: 878000, override,shunran:-2000
         load = new SongLoader(GAME_TICK);
-        song = load.getSong("override");
+        song = load.getSong("phony");
         loadMusic();
 
         isMenu = false;
