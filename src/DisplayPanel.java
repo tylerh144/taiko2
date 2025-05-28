@@ -23,10 +23,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private SongLoader load;
     private boolean close;
     private int animCount, syncCount;
-    private final double GAME_TICK = 10.54; //school: 10.54, home: 15.50-.54
+    private final double GAME_TICK = 15.5; //school: 10.54, home: 15.50-.54
     private Clip audio;
     private BufferedImage goodImg, missImg, drumIn, drumOut;
     private float d1a, d2a, k1a, k2a, goodA, missA;
+    private double missY;
 
     private String message;
 
@@ -35,7 +36,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         timer = new Timer(1, this);
         curTime = ((int) (-2000 / GAME_TICK)) * GAME_TICK; //bus: 878000, override,shunran:-2000
         load = new SongLoader(GAME_TICK);
-        song = load.getSong("DNA");
+        song = load.getSong("sukisuki");
         loadMusic();
 
         isMenu = false;
@@ -84,15 +85,6 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             drawLane(g);
             calcAcc();
 
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, goodA));
-            g2d.drawImage(goodImg, 168, 111, 128, 128, null);
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
-
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, missA));
-            g2d.drawImage(missImg, 168, 111, 128, 128, null);
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
-
-
             if (!song.isEmpty()) {
                 currentNote = song.getFirst();
                 for (int i = song.size() - 1; i >= 0; i--) {
@@ -101,7 +93,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                     if (n.getHitTime() < curTime - 100) {
                         song.remove(i);
                         miss++;
-                        missA  = 1f;
+                        missA = 8f;
+                        missY = 75;
                         if (combo > maxCombo) {
                             maxCombo = combo;
                         }
@@ -130,7 +123,25 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                     }
                 }
             }
+
             drawDrum(g);
+
+            if (goodA > 1) {
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+            } else {
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, goodA));
+            }
+            g2d.drawImage(goodImg, 132, 75, 200, 200, null);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+
+            if (missA > 1) {
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+            } else {
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, missA));
+            }
+            g2d.drawImage(missImg, 132, (int) missY, 200, 200, null);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+
 //            else {
 //                timer.stop();
 //            }
@@ -149,28 +160,28 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         if (key == KeyEvent.VK_F) {
             if (!d1Down) {
                 d1Down = true;
-                d1a = 1f;
+                d1a = 16f;
 //                System.out.println("D1");
                 hit(0);
             }
         } else if (key == KeyEvent.VK_G) {
             if (!d2Down) {
                 d2Down = true;
-                d2a = 1f;
+                d2a = 16f;
 //                System.out.println("D2");
                 hit(0);
             }
         } else if (key == KeyEvent.VK_NUMPAD5) {
             if (!k1Down) {
                 k1Down = true;
-                k1a = 1f;
+                k1a = 16f;
 //                System.out.println("K1");
                 hit(1);
             }
         } else if (key == KeyEvent.VK_NUMPAD6) {
             if (!k2Down) {
                 k2Down = true;
-                k2a = 1f;
+                k2a = 16f;
 //                System.out.println("K2");
                 hit(1);
             }
@@ -219,17 +230,18 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 close = !close;
                 animCount = 0;
             }
-            if (syncCount == 1000) {
+            if (syncCount == 100) {
                 syncCount = 0;
                 audio.setMicrosecondPosition((long) (1000 * curTime));
             }
 
-            k1a *= .9f;
-            k2a *= .9f;
-            d1a *= .9f;
-            d2a *= .9f;
-            goodA *= .92f;
-            missA *= .92f;
+            k1a *= .5f;
+            k2a *= .5f;
+            d1a *= .5f;
+            d2a *= .5f;
+            goodA *= .85f;
+            missA *= .8f;
+            missY += .5;
             repaint();
         }
     }
@@ -277,19 +289,36 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.setColor(Color.DARK_GRAY);
         g.fillOval(25, 125, 100, 100);
 
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, k1a));
+//MAYBE ABSTRACT THIS
+        if (k1a > 1) {
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+        } else {
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, k1a));
+        }
         g2d.drawImage(drumOut, 75, 125, -50, 100, null);
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, k2a));
+        if (k2a > 1) {
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+        } else {
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, k2a));
+        }
         g2d.drawImage(drumOut, 75, 125, 50, 100, null);
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, d1a));
+        if (d1a > 1) {
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+        } else {
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, d1a));
+        }
         g2d.drawImage(drumIn, 35, 135, 40, 80, null);
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, d2a));
+        if (d2a > 1) {
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+        } else {
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, d2a));
+        }
         g2d.drawImage(drumIn, 115, 135, -40, 80, null);
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 
@@ -311,6 +340,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.drawString("" + combo, comboX, 185);
     }
 
+//CHANGE HIT WINDOWS
     private void hit(int keyColor) {
         double curHit = currentNote.getHitTime();
         int noteColor = currentNote.getColor();
@@ -325,7 +355,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             } else if (curHit < curTime + 100 && curHit > curTime - 100) {
                 good++;
                 combo++;
-                goodA = 1f;
+                goodA = 2f;
                 song.removeFirst();
                 if (!song.isEmpty()) {
                     currentNote = song.getFirst();
@@ -333,7 +363,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             }
         } else if (curHit < curTime + 100 && curHit > curTime - 100) {
             miss++;
-            missA = 1f;
+            missA = 8f;
+            missY = 75;
             if (combo >= 50) {
                 File audioFile = new File("Assets/sound_combobreak.wav");
                 try {
