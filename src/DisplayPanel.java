@@ -1,3 +1,4 @@
+import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -5,7 +6,9 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class DisplayPanel extends JPanel implements KeyListener, MouseListener, ActionListener {
@@ -19,9 +22,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private double accuracy;
     private SongLoader load;
     private boolean close;
-    private int animCount, d1Count, d2Count, k1Count, k2Count;
-    private final double GAME_TICK = 15.5; //school: 10.54, home: 15.50-.54
+    private int animCount, syncCount;
+    private final double GAME_TICK = 10.54; //school: 10.54, home: 15.50-.54
     private Clip audio;
+    private BufferedImage goodImg, missImg, drumIn, drumOut;
+    private float d1a, d2a, k1a, k2a, goodA, missA;
 
     private String message;
 
@@ -30,7 +35,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         timer = new Timer(1, this);
         curTime = ((int) (-2000 / GAME_TICK)) * GAME_TICK; //bus: 878000, override,shunran:-2000
         load = new SongLoader(GAME_TICK);
-        song = load.getSong("phony");
+        song = load.getSong("DNA");
         loadMusic();
 
         isMenu = false;
@@ -48,9 +53,19 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         accuracy = 0;
 
         animCount = 0;
+        syncCount = 0;
 
         message = "";
         close = true;
+
+        try {
+            goodImg = ImageIO.read(new File("Assets/good.png"));
+            missImg = ImageIO.read(new File("Assets/miss.png"));
+            drumIn = ImageIO.read(new File("Assets/taiko-drum-inner.png"));
+            drumOut = ImageIO.read(new File("Assets/taiko-drum-outer.png"));
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
 
         timer.start();
 
@@ -69,6 +84,15 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             drawLane(g);
             calcAcc();
 
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, goodA));
+            g2d.drawImage(goodImg, 168, 111, 128, 128, null);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, missA));
+            g2d.drawImage(missImg, 168, 111, 128, 128, null);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+
+
             if (!song.isEmpty()) {
                 currentNote = song.getFirst();
                 for (int i = song.size() - 1; i >= 0; i--) {
@@ -77,21 +101,22 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                     if (n.getHitTime() < curTime - 100) {
                         song.remove(i);
                         miss++;
+                        missA  = 1f;
                         if (combo > maxCombo) {
                             maxCombo = combo;
                         }
-                        combo = 0;
-//MAYBE ADD ANOTHER MISS SOUND
-                        File audioFile = new File("Assets/sound_combobreak.wav");
-                        try {
-                            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
-                            Clip clip = AudioSystem.getClip();
-                            clip.open(audioStream);
-                            clip.start();
-                        } catch (Exception e) {
-                            System.out.println(e.getMessage());
+                        if (combo >= 50) {
+                            File audioFile = new File("Assets/sound_combobreak.wav");
+                            try {
+                                AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+                                Clip clip = AudioSystem.getClip();
+                                clip.open(audioStream);
+                                clip.start();
+                            } catch (Exception e) {
+                                System.out.println(e.getMessage());
+                            }
                         }
-
+                        combo = 0;
                         i++;
                     } else if (curTime >= n.getSpawnTime()) {
 
@@ -124,24 +149,28 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         if (key == KeyEvent.VK_F) {
             if (!d1Down) {
                 d1Down = true;
+                d1a = 1f;
 //                System.out.println("D1");
                 hit(0);
             }
         } else if (key == KeyEvent.VK_G) {
             if (!d2Down) {
                 d2Down = true;
+                d2a = 1f;
 //                System.out.println("D2");
                 hit(0);
             }
         } else if (key == KeyEvent.VK_NUMPAD5) {
             if (!k1Down) {
                 k1Down = true;
+                k1a = 1f;
 //                System.out.println("K1");
                 hit(1);
             }
         } else if (key == KeyEvent.VK_NUMPAD6) {
             if (!k2Down) {
                 k2Down = true;
+                k2a = 1f;
 //                System.out.println("K2");
                 hit(1);
             }
@@ -185,10 +214,22 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 audio.start();
             }
             animCount++;
+            syncCount++;
             if (animCount == 20) {
                 close = !close;
                 animCount = 0;
             }
+            if (syncCount == 1000) {
+                syncCount = 0;
+                audio.setMicrosecondPosition((long) (1000 * curTime));
+            }
+
+            k1a *= .9f;
+            k2a *= .9f;
+            d1a *= .9f;
+            d2a *= .9f;
+            goodA *= .92f;
+            missA *= .92f;
             repaint();
         }
     }
@@ -203,7 +244,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 
         //note lane
-        g.setColor(Color.BLACK);
+        g.setColor(Color.decode("#111111"));
         g.fillRect(0, 100, 1000, 150);
 
         //stats
@@ -217,43 +258,44 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.drawString("Current Time: " + curTime, 200, 75);
 
         //hit indicator
-        g.setColor(Color.WHITE);
-        g.drawOval(200, 143, 64, 64);
+        g.setColor(Color.BLACK);
         g.drawRect(0, 100, 1000, 150);
+
+        g.setColor(Color.WHITE);
+        g.drawOval(192, 135, 80, 80);
+
+        g.setColor(Color.DARK_GRAY);
+        g.fillOval(200, 143, 64, 64);
     }
 
-    private void drawDrum( Graphics g) {
-        Color blue = Color.decode("#32b0be");
-        Color red = Color.decode("#f9472d");
-        g.setColor(Color.DARK_GRAY);
+    private void drawDrum(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+
+        g.setColor(Color.BLACK);
         g.fillRect(0, 100, 150, 150);
-        if (k1Down) {
-            g.setColor(blue);
-        } else {
-            g.setColor(Color.DARK_GRAY);
-        }
-        g.fillArc(25, 125, 100, 100, 90, 180);
-        if (k2Down) {
-            g.setColor(blue);
-        } else {
-            g.setColor(Color.DARK_GRAY);
-        }
-        g.fillArc(25, 125, 100, 100, 270, 180);
-        if (d1Down) {
-            g.setColor(red);
-        } else {
-            g.setColor(Color.DARK_GRAY);
-        }
-        g.fillArc(38, 138, 74, 74, 90, 180);
-        if (d2Down) {
-            g.setColor(red);
-        } else {
-            g.setColor(Color.DARK_GRAY);
-        }
-        g.fillArc(38, 138, 74, 74, 270, 180);
+
+        g.setColor(Color.DARK_GRAY);
+        g.fillOval(25, 125, 100, 100);
+
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, k1a));
+        g2d.drawImage(drumOut, 75, 125, -50, 100, null);
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, k2a));
+        g2d.drawImage(drumOut, 75, 125, 50, 100, null);
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, d1a));
+        g2d.drawImage(drumIn, 35, 135, 40, 80, null);
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, d2a));
+        g2d.drawImage(drumIn, 115, 135, -40, 80, null);
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+
         g.setColor(Color.BLACK);
         g.drawOval(25, 125, 100, 100);
-        g.drawOval(38, 138, 74, 74);
+        g.drawOval(35, 135, 80, 80);
         g.drawLine(75, 125, 75, 225);
 
         g.setFont(new Font("Arial", Font.BOLD, 30));
@@ -283,6 +325,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             } else if (curHit < curTime + 100 && curHit > curTime - 100) {
                 good++;
                 combo++;
+                goodA = 1f;
                 song.removeFirst();
                 if (!song.isEmpty()) {
                     currentNote = song.getFirst();
@@ -290,20 +333,22 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             }
         } else if (curHit < curTime + 100 && curHit > curTime - 100) {
             miss++;
+            missA = 1f;
+            if (combo >= 50) {
+                File audioFile = new File("Assets/sound_combobreak.wav");
+                try {
+                    AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+                    Clip clip = AudioSystem.getClip();
+                    clip.open(audioStream);
+                    clip.start();
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
             combo = 0;
             song.removeFirst();
             if (!song.isEmpty()) {
                 currentNote = song.getFirst();
-            }
-
-            File audioFile = new File("Assets/sound_combobreak.wav");
-            try {
-                AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
-                Clip clip = AudioSystem.getClip();
-                clip.open(audioStream);
-                clip.start();
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
             }
         }
         if (combo > maxCombo) {
