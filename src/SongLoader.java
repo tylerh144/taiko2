@@ -10,6 +10,7 @@ public class SongLoader {
     private ArrayList<Double[]> timeVelocity;
     private BufferedImage bg;
     private String audioPath;
+    private String title, mapper;
     private double sliderMult;
     private double gameTick;
 
@@ -25,13 +26,21 @@ public class SongLoader {
         try {
             bg = ImageIO.read(new File("Songs/" + songName + "/bg.jpg"));
         } catch (IOException e) {
-        System.out.println(e.getMessage());
-    }
+            System.out.println(e.getMessage());
+        }
         return song;
     }
 
     public BufferedImage getBg() {
         return bg;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getMapper() {
+        return mapper;
     }
 
     public double getBgRatio() {
@@ -52,6 +61,22 @@ public class SongLoader {
             File myFile = new File("Songs/" + songName + "/data.osu");
             Scanner fileScanner = new Scanner(myFile);
 
+            while (!fileScanner.nextLine().equals("[Metadata]")) {
+                //skip until metadata
+            }
+            String str = fileScanner.nextLine();
+            String[] split = str.split(":");
+            title = split[1];
+            fileScanner.nextLine();
+            str = fileScanner.nextLine();
+            split = str.split(":");
+            title = split[1] + " - " + title;
+            fileScanner.nextLine();
+
+            str = fileScanner.nextLine();
+            split = str.split(":");
+            mapper = split[1];
+
             //MAYBE ADD OVERALL DIFFICULTY
             while (!fileScanner.nextLine().equals("[Difficulty]")) {
                 //skip until sliderMult
@@ -59,8 +84,8 @@ public class SongLoader {
             for (int i = 0; i < 4; i++) {
                 fileScanner.nextLine();
             }
-            String sm = fileScanner.nextLine();
-            String[] split = sm.split(":");
+            str = fileScanner.nextLine();
+            split = str.split(":");
             sliderMult = Double.parseDouble(split[1]);
 
             while (!fileScanner.nextLine().equals("[TimingPoints]")) {
