@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class DisplayPanel extends JPanel implements KeyListener, MouseListener, ActionListener {
-    private final double GAME_TICK = 10.54; //school: 10.54, home: 15.50-.54
+    private final double GAME_TICK = 15.5; //school: 10.54, home: 15.50-.54
     private Timer timer;
     private double curTime;
     private boolean isMenu, isEnd, isGame;
@@ -34,9 +34,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     public DisplayPanel() {
 
         timer = new Timer(1, this);
-        curTime = ((int) (132000 / GAME_TICK)) * GAME_TICK; //bus: 878000, override,shunran:-2000
+        curTime = ((int) (-2000 / GAME_TICK)) * GAME_TICK; //bus: 878000, override,shunran:-2000
         load = new SongLoader(GAME_TICK);
-        song = load.getSong("override");
+        song = load.getSong("sukisuki");
         loadMusic();
 
         isMenu = false;
@@ -186,8 +186,10 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.setFont(new Font("Arial", Font.BOLD, 300));
             String score;
             if (accuracy == 100) {
+                g.setColor(Color.decode("#dba400"));
+                g.drawString("S", 620, 380);
                 g.setColor(Color.ORANGE);
-                score = "SS";
+                score = "S";
             } else if (miss == 0 && accuracy >= 95) {
                 g.setColor(Color.ORANGE);
                 score = "S";
@@ -283,7 +285,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof Timer) {
-            curTime+= GAME_TICK;
+            curTime += GAME_TICK;
             if (curTime > 0 && !audio.isActive()) {
                 audio.start();
             }
@@ -292,13 +294,14 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             if (animCount == 20) {
                 close = !close;
                 animCount = 0;
-                audio.setMicrosecondPosition((long) (1000 * curTime));
+//                curTime = audio.getMicrosecondPosition() / 1000.0;
+//                audio.setMicrosecondPosition((long) (1000 * curTime));
             }
 
-//            if (syncCount == 500) {
-//                syncCount = 0;
-//                audio.setMicrosecondPosition((long) (1000 * curTime));
-//            }
+            if (syncCount == 500) {
+                syncCount = 0;
+                audio.setMicrosecondPosition((long) (1000 * curTime));
+            }
 
             k1a *= .5f;
             k2a *= .5f;
@@ -333,6 +336,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.drawString("Accuracy: " + accuracy + "%", 200, 25);
         g.drawString("Max Combo: " + maxCombo + "x", 200, 50);
         g.drawString("Current Time: " + curTime, 200, 75);
+        g.drawString("" + audio.getMicrosecondPosition() / 1000, 310, 90);
 
         //hit indicator
         g.setColor(Color.BLACK);
