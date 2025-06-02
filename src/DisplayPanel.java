@@ -22,7 +22,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private double accuracy;
     private SongLoader load;
     private boolean close;
-    private int animCount, syncCount;
+    private int animCount;
     private Clip audio;
     private BufferedImage goodImg, missImg, drumIn, drumOut;
     private float d1a, d2a, k1a, k2a, goodA, missA;
@@ -78,6 +78,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 missA = 0;
                 isEnd = true;
                 isGame = false;
+//                repaint(); maybe?
             }
 
             if (!song.isEmpty()) {
@@ -313,17 +314,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 if (animCount == 20) {
                     close = !close;
                     animCount = 0;
-//                curTime = audio.getMicrosecondPosition() / 1000.0;
-//                audio.setMicrosecondPosition((long) (1000 * curTime));
                 }
             }
-
-
-//            syncCount++;
-//            if (syncCount == 50) {
-//                syncCount = 0;
-//                audio.setMicrosecondPosition((long) (1000 * curTime));
-//            }
 
             k1a *= .5f;
             k2a *= .5f;
@@ -360,7 +352,6 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.drawString("Accuracy: " + accuracy + "%", 200, 25);
         g.drawString("Max Combo: " + maxCombo + "x", 200, 50);
         g.drawString("Current Time: " + curTime, 200, 75);
-        g.drawString("" + audio.getMicrosecondPosition() / 1000, 310, 90);
 
         //hit indicator
         g.setColor(Color.BLACK);
@@ -513,15 +504,13 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         accuracy = 0;
 
         animCount = 0;
-        syncCount = 0;
-
         close = true;
 
         curTime = -2000; //bus: 878000, override,shunran:-2000
-        song = load.getSong("worstregret");
+        song = load.getSong("nonbreath");
         endTime = song.getLast().getHitTime() + 3000;
         loadMusic();
-        audio.setMicrosecondPosition(0);
+        audio.setMicrosecondPosition((long) (curTime * 1000));
 
         timer.start();
     }
