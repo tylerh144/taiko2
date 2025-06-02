@@ -12,12 +12,10 @@ public class SongLoader {
     private String audioPath;
     private String title, mapper;
     private double sliderMult;
-    private double gameTick;
 
-    public SongLoader (double gt) {
+    public SongLoader () {
         song = new ArrayList<>();
         timeVelocity = new ArrayList<>();
-        gameTick = gt;
     }
 
     public ArrayList<Note> getSong(String songName) {
@@ -130,7 +128,7 @@ public class SongLoader {
                         velocity = array[1];
                     }
                 }
-                Note n = new Note(hitTime, color, velocity, gameTick);
+                Note n = new Note(hitTime, color, velocity);
                 song.add(n);
             }
         } catch (IOException exception) {

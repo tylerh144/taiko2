@@ -12,9 +12,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class DisplayPanel extends JPanel implements KeyListener, MouseListener, ActionListener {
-    private final double GAME_TICK = 10.54; //school: 10.54, home: 15.50-.54
     private Timer timer;
-    private double curTime;
+    private double curTime, endTime;
     private boolean isMenu, isEnd, isGame;
     private boolean d1Down, d2Down, k1Down, k2Down;
     private ArrayList<Note> song;
@@ -33,7 +32,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     public DisplayPanel() {
         timer = new Timer(1, this);
 
-        load = new SongLoader(GAME_TICK);
+        load = new SongLoader();
 
         reset();
 
@@ -69,7 +68,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             drawLane(g);
             calcAcc();
 
-            if (curTime * 1000 > audio.getMicrosecondLength()) {
+            if (curTime > endTime) {
                 timer.stop();
                 d1a = 0;
                 d2a = 0;
@@ -90,6 +89,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                         if (n.getHitTime() < curTime - 100) {
                             song.remove(i);
                             miss++;
+                            animCount = 0;
+                            close = true;
                             missA = 8f;
                             missY = 75;
                             if (combo > maxCombo) {
@@ -116,7 +117,10 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                                 g2d.drawImage(n.getImg(close), (int) n.getxPos(), 143, 64, 64, null);
 
                             }
-                            n.move();
+
+                            n.move(curTime);
+//                            n.setxPos(1000 - (curTime - n.getSpawnTime()) * n.getVelocity());
+
                         }
                     }
                 }
@@ -129,7 +133,6 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         }
 
         if (isEnd) {
-            audio.close();
             g2d.drawImage(load.getBg(), 0, 0, 1000, (int) (1000 * load.getBgRatio()),  null);
             g.setColor(Color.BLACK);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .3f));
@@ -153,16 +156,18 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.drawString("Max Combo: " + maxCombo + "x", 50, 260);
             g.drawString("Accuracy: " + accuracy + "%", 50, 300);
 
+            if (miss == 0) {
+                g.setColor(Color.MAGENTA);
+                g.drawString("FULL COMBO", 50, 340);
+            }
+
             g.setColor(Color.BLACK);
             g2d.fill(back);
             g.setColor(Color.WHITE);
             g2d.draw(back);
             g.drawString("Back", 125, 532);
 
-            if (miss == 0) {
-                g.setColor(Color.MAGENTA);
-                g.drawString("FULL COMBO", 50, 340);
-            }
+
 
             g.setFont(new Font("Arial", Font.BOLD, 300));
             String score;
@@ -238,7 +243,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             } else if (key == KeyEvent.VK_NUMPAD6) {
                 if (!k2Down) {
                     k2Down = true;
-                    k2a = (float) (16f * 15 / GAME_TICK);
+                    k2a = (float) (16f * 15);
 //                System.out.println("K2");
                     hit(1);
                 }
@@ -274,6 +279,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             } else if (play.contains(location)) {
                 isMenu = false;
                 isGame = true;
+                reset();
                 repaint();
             }
 
@@ -292,23 +298,32 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof Timer) {
-            curTime += GAME_TICK;
-            if (curTime > 0 && !audio.isActive()) {
-                audio.start();
-            }
-            animCount++;
-            syncCount++;
-            if (animCount == 20) {
-                close = !close;
-                animCount = 0;
-//                curTime = audio.getMicrosecondPosition() / 1000.0;
-//                audio.setMicrosecondPosition((long) (1000 * curTime));
+            if (curTime < 0) {
+                curTime += 10;
+            } else {
+                curTime = audio.getMicrosecondPosition() / 1000.0;
             }
 
-            if (syncCount == 20) {
-                syncCount = 0;
-                audio.setMicrosecondPosition((long) (1000 * curTime));
+            if (curTime >= 0 && !audio.isActive()) {
+                audio.start();
             }
+
+            if (combo >= 50) {
+                animCount++;
+                if (animCount == 20) {
+                    close = !close;
+                    animCount = 0;
+//                curTime = audio.getMicrosecondPosition() / 1000.0;
+//                audio.setMicrosecondPosition((long) (1000 * curTime));
+                }
+            }
+
+
+//            syncCount++;
+//            if (syncCount == 50) {
+//                syncCount = 0;
+//                audio.setMicrosecondPosition((long) (1000 * curTime));
+//            }
 
             k1a *= .5f;
             k2a *= .5f;
@@ -423,6 +438,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             }
         } else if (curHit < curTime + 100 && curHit > curTime - 100) {
             miss++;
+            animCount = 0;
+            close = true;
             missA = 8f;
             missY = 75;
             if (combo >= 50) {
@@ -500,8 +517,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         close = true;
 
-        curTime = ((int) (-2000 / GAME_TICK)) * GAME_TICK; //bus: 878000, override,shunran:-2000
-        song = load.getSong("sukisuki");
+        curTime = -2000; //bus: 878000, override,shunran:-2000
+        song = load.getSong("worstregret");
+        endTime = song.getLast().getHitTime() + 3000;
         loadMusic();
         audio.setMicrosecondPosition(0);
 

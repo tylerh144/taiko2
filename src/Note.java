@@ -13,15 +13,11 @@ public class Note {
     private BufferedImage img;
     private BufferedImage img1;
 
-    public Note(double hitTime, int color, double velocity, double gameTick) {
+    public Note(double hitTime, int color, double velocity) {
         this.hitTime = hitTime;
         spawnTime = hitTime - 224000.0 / velocity;
-        this.velocity = velocity * gameTick * .005 / 1.4;
-        if (getSpawnTime() % gameTick != 0) {
-            xPos = 1000 - (gameTick - (spawnTime % gameTick)) * velocity * 0.005 / 1.4 ;
-        } else {
-            xPos = 1000;
-        }
+        this.velocity = velocity * .005 / 1.4;
+        xPos = 1000;
 
         if (color == 0) {
             this.color = 0;
@@ -45,8 +41,8 @@ public class Note {
             this.color = 0;
             big = true;
             try {
-                img = ImageIO.read(new File("Assets/don_b.png"));
-                img1 = ImageIO.read(new File("Assets/don_b1.png"));
+                img = ImageIO.read(new File("Assets/don_b1.png"));
+                img1 = ImageIO.read(new File("Assets/don_b.png"));
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
@@ -54,8 +50,8 @@ public class Note {
             this.color = 1;
             big = true;
             try {
-                img = ImageIO.read(new File("Assets/ka_b.png"));
-                img1 = ImageIO.read(new File("Assets/ka_b1.png"));
+                img = ImageIO.read(new File("Assets/ka_b1.png"));
+                img1 = ImageIO.read(new File("Assets/ka_b.png"));
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
@@ -106,9 +102,8 @@ public class Note {
         }
     }
 
-    //change mult
-    public void move() {
-        xPos -= velocity;
+    public void move(double curTime) {
+        xPos = 1000 - (curTime - spawnTime) * velocity;
     }
 
     @Override
