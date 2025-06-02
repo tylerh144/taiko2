@@ -28,11 +28,14 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private float d1a, d2a, k1a, k2a, goodA, missA;
     private double missY;
     private Rectangle back, play;
+    private String songName;
 
     public DisplayPanel() {
         timer = new Timer(1, this);
 
         load = new SongLoader();
+
+        songName = "DNA";
 
         reset();
 
@@ -40,7 +43,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         isGame = false;
         isEnd = false;
 
-        //buttons
+        //MAKE THESE INTO REAL BUTTONS
         back = new Rectangle(25, 500, 250, 50);
         play = new Rectangle(725, 500, 250, 50);
 
@@ -68,25 +71,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             drawLane(g);
             calcAcc();
 
-            if (curTime > endTime) {
-                timer.stop();
-                d1a = 0;
-                d2a = 0;
-                k1a = 0;
-                k2a = 0;
-                goodA = 0;
-                missA = 0;
-                isEnd = true;
-                isGame = false;
-//                repaint(); maybe?
-            }
-
             if (!song.isEmpty()) {
                 currentNote = song.getFirst();
                 for (int i = song.size() - 1; i >= 0; i--) {
                     if (!song.isEmpty()) {
                         Note n = song.get(i);
-                        //add 200ms for real
                         if (n.getHitTime() < curTime - 100) {
                             song.remove(i);
                             miss++;
@@ -118,10 +107,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                                 g2d.drawImage(n.getImg(close), (int) n.getxPos(), 143, 64, 64, null);
 
                             }
-
                             n.move(curTime);
-//                            n.setxPos(1000 - (curTime - n.getSpawnTime()) * n.getVelocity());
-
                         }
                     }
                 }
@@ -134,6 +120,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         }
 
         if (isEnd) {
+            //END SCREEN DOES NOT REACH ON CERTAIN SONGS (shunran, override(?))
+
             g2d.drawImage(load.getBg(), 0, 0, 1000, (int) (1000 * load.getBgRatio()),  null);
             g.setColor(Color.BLACK);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .3f));
@@ -203,6 +191,14 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g2d.fill(play);
             g.setColor(Color.WHITE);
             g2d.draw(play);
+
+            //FOR EACH FOLDER IN "Songs"
+            //load.setMetaData(songName)
+            //DISPLAY INFO AS BUTTONS(?)
+            g.setColor(Color.BLACK);
+            g.drawString("Selected: " + load.getTitle(), 400, 400);
+
+            g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString("Play", 800, 532);
 
@@ -309,6 +305,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 audio.start();
             }
 
+            if (curTime > endTime) {
+                isEnd = true;
+                isGame = false;
+            }
+
             if (combo >= 50) {
                 animCount++;
                 if (animCount == 20) {
@@ -411,14 +412,14 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         double curHit = currentNote.getHitTime();
         int noteColor = currentNote.getColor();
         if (keyColor == noteColor) {
-            if (curHit < curTime + 50 && curHit > curTime - 50) {
+            if (curHit < curTime + 40 && curHit > curTime - 40) {
                 perf++;
                 combo++;
                 song.removeFirst();
                 if (!song.isEmpty()) {
                     currentNote = song.getFirst();
                 }
-            } else if (curHit < curTime + 100 && curHit > curTime - 100) {
+            } else if (curHit < curTime + 80 && curHit > curTime - 80) {
                 good++;
                 combo++;
                 goodA = 2f;
@@ -507,8 +508,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         close = true;
 
         curTime = -2000; //bus: 878000, override,shunran:-2000
-        song = load.getSong("nonbreath");
+        song = load.getSong(songName);
         endTime = song.getLast().getHitTime() + 3000;
+        load.setMetaData(songName);
         loadMusic();
         audio.setMicrosecondPosition((long) (curTime * 1000));
 

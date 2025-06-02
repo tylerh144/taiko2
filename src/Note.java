@@ -73,7 +73,6 @@ public class Note {
         return hitTime;
     }
 
-    //fix time on high bpms
     public double getSpawnTime() {
         return spawnTime;
     }
@@ -103,7 +102,7 @@ public class Note {
     }
 
     public void move(double curTime) {
-        xPos = 1000 - (curTime - spawnTime) * velocity;
+        xPos = 990 - (curTime - spawnTime) * velocity;
     }
 
     @Override

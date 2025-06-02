@@ -6,74 +6,19 @@ import java.util.Scanner;
 import java.util.ArrayList;
 
 public class SongLoader {
-    private ArrayList<Note> song;
-    private ArrayList<Double[]> timeVelocity;
     private BufferedImage bg;
     private String audioPath;
     private String title, mapper;
-    private double sliderMult;
 
     public SongLoader () {
-        song = new ArrayList<>();
-        timeVelocity = new ArrayList<>();
     }
 
     public ArrayList<Note> getSong(String songName) {
-        parseData(songName);
-        audioPath = "Songs/" + songName + "/audio.wav";
-        try {
-            bg = ImageIO.read(new File("Songs/" + songName + "/bg.jpg"));
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-        return song;
-    }
-
-    public BufferedImage getBg() {
-        return bg;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getMapper() {
-        return mapper;
-    }
-
-    public double getBgRatio() {
-        return (double) bg.getHeight() / bg.getWidth();
-    }
-
-    public String getAudioPath() {
-        return audioPath;
-    }
-
-    //get image
-    //get audio
-
-    private void parseData(String songName) {
-        song = new ArrayList<>();
-        timeVelocity = new ArrayList<>();
+        ArrayList<Note> song = new ArrayList<>();
+        ArrayList<Double[]> timeVelocity = new ArrayList<>();
         try {
             File myFile = new File("Songs/" + songName + "/data.osu");
             Scanner fileScanner = new Scanner(myFile);
-
-            while (!fileScanner.nextLine().equals("[Metadata]")) {
-                //skip until metadata
-            }
-            String str = fileScanner.nextLine();
-            String[] split = str.split(":");
-            title = split[1];
-            fileScanner.nextLine();
-            str = fileScanner.nextLine();
-            split = str.split(":");
-            title = split[1] + " - " + title;
-            fileScanner.nextLine();
-
-            str = fileScanner.nextLine();
-            split = str.split(":");
-            mapper = split[1];
 
             //MAYBE ADD OVERALL DIFFICULTY
             while (!fileScanner.nextLine().equals("[Difficulty]")) {
@@ -82,9 +27,10 @@ public class SongLoader {
             for (int i = 0; i < 4; i++) {
                 fileScanner.nextLine();
             }
-            str = fileScanner.nextLine();
-            split = str.split(":");
-            sliderMult = Double.parseDouble(split[1]);
+            String str = fileScanner.nextLine();
+            String[] split = str.split(":");
+
+            double sliderMult = Double.parseDouble(split[1]);
 
             while (!fileScanner.nextLine().equals("[TimingPoints]")) {
                 //skip until timingpoints
@@ -131,6 +77,61 @@ public class SongLoader {
                 Note n = new Note(hitTime, color, velocity);
                 song.add(n);
             }
+        } catch (IOException exception) {
+            System.out.println(exception.getMessage());
+        }
+        return song;
+    }
+
+    public void setMetaData(String songName) {
+        audioPath = "Songs/" + songName + "/audio.wav";
+        try {
+            bg = ImageIO.read(new File("Songs/" + songName + "/bg.jpg"));
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        parseMetaData(songName);
+    }
+
+    public BufferedImage getBg() {
+        return bg;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getMapper() {
+        return mapper;
+    }
+
+    public double getBgRatio() {
+        return (double) bg.getHeight() / bg.getWidth();
+    }
+
+    public String getAudioPath() {
+        return audioPath;
+    }
+
+    private void parseMetaData(String songName) {
+        try {
+            File myFile = new File("Songs/" + songName + "/data.osu");
+            Scanner fileScanner = new Scanner(myFile);
+        while (!fileScanner.nextLine().equals("[Metadata]")) {
+            //skip until metadata
+        }
+        String str = fileScanner.nextLine();
+        String[] split = str.split(":");
+        title = split[1];
+        fileScanner.nextLine();
+        str = fileScanner.nextLine();
+        split = str.split(":");
+        title = split[1] + " - " + title;
+        fileScanner.nextLine();
+
+        str = fileScanner.nextLine();
+        split = str.split(":");
+        mapper = split[1];
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
         }
