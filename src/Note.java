@@ -28,7 +28,7 @@ public class Note {
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
-        } else if (color == 8) {
+        } else if (color == 8 || color == 2) {
             this.color = 1;
             big = false;
             try {
@@ -60,6 +60,7 @@ public class Note {
             this.color = -1;
             big = true;
             //color = endhittime
+            //maybe Spinner extends Note
             try {
                 img = ImageIO.read(new File("Assets/spinner-warning.png"));
                 img1 = img;

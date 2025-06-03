@@ -35,7 +35,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         load = new SongLoader();
 
-        songName = "DNA";
+        songName = "yorunikakeru";
 
         reset();
 
@@ -43,7 +43,6 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         isGame = false;
         isEnd = false;
 
-        //MAKE THESE INTO REAL BUTTONS
         back = new Rectangle(25, 500, 250, 50);
         play = new Rectangle(725, 500, 250, 50);
 
@@ -135,7 +134,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.fillRect(0, 0, 1000, 80);
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 24));
-            g.drawString(load.getTitle(), 20, 25);
+            g.drawString(load.getArtist() + " - " + load.getTitle(), 20, 25);
             g.setFont(new Font("Arial", Font.BOLD, 16));
             g.drawString("Beatmap by " + load.getMapper(), 20, 50);
             g.setFont(new Font("Arial", Font.BOLD, 24));
@@ -196,7 +195,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             //load.setMetaData(songName)
             //DISPLAY INFO AS BUTTONS(?)
             g.setColor(Color.BLACK);
-            g.drawString("Selected: " + load.getTitle(), 400, 400);
+            g.drawString("Selected: " + load.getArtist() + " - " + load.getTitle(), 400, 400);
 
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 24));
@@ -219,28 +218,28 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             if (key == KeyEvent.VK_F) {
                 if (!d1Down) {
                     d1Down = true;
-                    d1a = 16f;
+                    d1a = 160f;
 //                System.out.println("D1");
                     hit(0);
                 }
             } else if (key == KeyEvent.VK_G) {
                 if (!d2Down) {
                     d2Down = true;
-                    d2a = 16f;
+                    d2a = 160f;
 //                System.out.println("D2");
                     hit(0);
                 }
             } else if (key == KeyEvent.VK_NUMPAD5) {
                 if (!k1Down) {
                     k1Down = true;
-                    k1a = 16f;
+                    k1a = 160f;
 //                System.out.println("K1");
                     hit(1);
                 }
             } else if (key == KeyEvent.VK_NUMPAD6) {
                 if (!k2Down) {
                     k2Down = true;
-                    k2a = (float) (16f * 15);
+                    k2a = 160f;
 //                System.out.println("K2");
                     hit(1);
                 }
@@ -269,11 +268,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     public void mousePressed(MouseEvent e) {
         Point location = e.getPoint();
         if (e.getButton() == MouseEvent.BUTTON1) {
-            if (back.contains(location)) {
+            if (back.contains(location) && isEnd) {
                 isEnd = false;
                 isMenu = true;
                 repaint();
-            } else if (play.contains(location)) {
+            } else if (play.contains(location) && isMenu) {
                 isMenu = false;
                 isGame = true;
                 reset();
@@ -295,7 +294,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof Timer) {
-            if (curTime < 0) {
+            if (!audio.isActive()) {
                 curTime += 10;
             } else {
                 curTime = audio.getMicrosecondPosition() / 1000.0;
@@ -409,50 +408,52 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
 //CHANGE HIT WINDOWS
     private void hit(int keyColor) {
-        double curHit = currentNote.getHitTime();
-        int noteColor = currentNote.getColor();
-        if (keyColor == noteColor) {
-            if (curHit < curTime + 40 && curHit > curTime - 40) {
-                perf++;
-                combo++;
+        if (!song.isEmpty() && curTime > 0) {
+            double curHit = currentNote.getHitTime();
+            int noteColor = currentNote.getColor();
+            if (keyColor == noteColor) {
+                if (curHit < curTime + 40 && curHit > curTime - 40) {
+                    perf++;
+                    combo++;
+                    song.removeFirst();
+                    if (!song.isEmpty()) {
+                        currentNote = song.getFirst();
+                    }
+                } else if (curHit < curTime + 80 && curHit > curTime - 80) {
+                    good++;
+                    combo++;
+                    goodA = 2f;
+                    song.removeFirst();
+                    if (!song.isEmpty()) {
+                        currentNote = song.getFirst();
+                    }
+                }
+            } else if (curHit < curTime + 100 && curHit > curTime - 100) {
+                miss++;
+                animCount = 0;
+                close = true;
+                missA = 8f;
+                missY = 75;
+                if (combo >= 50) {
+                    File audioFile = new File("Assets/sound_combobreak.wav");
+                    try {
+                        AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+                        Clip clip = AudioSystem.getClip();
+                        clip.open(audioStream);
+                        clip.start();
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
+                }
+                combo = 0;
                 song.removeFirst();
                 if (!song.isEmpty()) {
                     currentNote = song.getFirst();
                 }
-            } else if (curHit < curTime + 80 && curHit > curTime - 80) {
-                good++;
-                combo++;
-                goodA = 2f;
-                song.removeFirst();
-                if (!song.isEmpty()) {
-                    currentNote = song.getFirst();
-                }
             }
-        } else if (curHit < curTime + 100 && curHit > curTime - 100) {
-            miss++;
-            animCount = 0;
-            close = true;
-            missA = 8f;
-            missY = 75;
-            if (combo >= 50) {
-                File audioFile = new File("Assets/sound_combobreak.wav");
-                try {
-                    AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
-                    Clip clip = AudioSystem.getClip();
-                    clip.open(audioStream);
-                    clip.start();
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                }
+            if (combo > maxCombo) {
+                maxCombo = combo;
             }
-            combo = 0;
-            song.removeFirst();
-            if (!song.isEmpty()) {
-                currentNote = song.getFirst();
-            }
-        }
-        if (combo > maxCombo) {
-            maxCombo = combo;
         }
 
         String path = "";

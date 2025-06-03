@@ -8,7 +8,7 @@ import java.util.ArrayList;
 public class SongLoader {
     private BufferedImage bg;
     private String audioPath;
-    private String title, mapper;
+    private String title, artist, mapper;
 
     public SongLoader () {
     }
@@ -101,6 +101,10 @@ public class SongLoader {
         return title;
     }
 
+    public String getArtist() {
+        return artist;
+    }
+
     public String getMapper() {
         return mapper;
     }
@@ -124,9 +128,10 @@ public class SongLoader {
         String[] split = str.split(":");
         title = split[1];
         fileScanner.nextLine();
+
         str = fileScanner.nextLine();
         split = str.split(":");
-        title = split[1] + " - " + title;
+        artist = split[1];
         fileScanner.nextLine();
 
         str = fileScanner.nextLine();
