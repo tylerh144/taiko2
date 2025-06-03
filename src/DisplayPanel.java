@@ -28,16 +28,16 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private float d1a, d2a, k1a, k2a, goodA, missA;
     private double missY;
     private Rectangle back, play;
-    private String songName;
+    private ArrayList<Rectangle> songButtons;
+    private ArrayList<String> songNames;
+    private int selectedSong;
 
     public DisplayPanel() {
         timer = new Timer(1, this);
 
         load = new SongLoader();
 
-        songName = "yorunikakeru";
-
-        reset();
+        selectedSong = 0;
 
         isMenu = true;
         isGame = false;
@@ -45,6 +45,16 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         back = new Rectangle(25, 500, 250, 50);
         play = new Rectangle(725, 500, 250, 50);
+        songButtons = new ArrayList<>();
+        songNames = new ArrayList<>();
+
+        File songFolder = new File("Songs");
+        File[] songs = songFolder.listFiles();
+        for (int i = 0; i < songs.length; i++) {
+            Rectangle r = new Rectangle(580, 30 + 45*i, 420, 42);
+            songButtons.add(r);
+            songNames.add(songs[i].getName());
+        }
 
         try {
             goodImg = ImageIO.read(new File("Assets/good.png"));
@@ -59,6 +69,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         addKeyListener(this);
         setFocusable(true);
         requestFocusInWindow();
+
+        reset();
+        timer.start();
     }
 
     @Override
@@ -186,18 +199,49 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 //ADD SONG SELECTION
         if (isMenu) {
             audio.close();
+            //bg
+            load.setMetaData(songNames.get(selectedSong));
+            g2d.drawImage(load.getBg(), 0, 0, 1000, (int) (1000 * load.getBgRatio()),  null);
+            g.setColor(Color.BLACK);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .3f));
+            g2d.fillRect(0, 0, 1000, 600);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+
+            //selected song bar
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, 500, 30);
+            g.setColor(Color.WHITE);
+            g.drawRect(0, 0, 500, 30);
+            g.setFont(new Font("Arial", Font.BOLD, 16));
+            g.drawString("Selected: " + load.getArtist() + " - " + load.getTitle(), 10, 20);
+
+            //DISPLAY INFO AS BUTTONS(?)
+
+            for (int i = 0; i < songButtons.size(); i++) {
+                if (selectedSong == i) {
+                    g.setColor(Color.decode("#349beb"));
+                } else {
+                    g.setColor(Color.decode("#f09030"));
+                }
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .8f));
+                g2d.fill(songButtons.get(i));
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+                g.setColor(Color.WHITE);
+                g2d.draw(songButtons.get(i));
+
+                load.setMetaData(songNames.get(i));
+                g.setFont(new Font("Arial", Font.BOLD, 16));
+                g.drawString(load.getTitle(), 600, 50 + 45*i);
+                g.setFont(new Font("Arial", Font.PLAIN, 12));
+                g.drawString(load.getArtist(), 600, 65 + 45*i);
+            }
+
+
+            //play
             g.setColor(Color.MAGENTA);
             g2d.fill(play);
             g.setColor(Color.WHITE);
             g2d.draw(play);
-
-            //FOR EACH FOLDER IN "Songs"
-            //load.setMetaData(songName)
-            //DISPLAY INFO AS BUTTONS(?)
-            g.setColor(Color.BLACK);
-            g.drawString("Selected: " + load.getArtist() + " - " + load.getTitle(), 400, 400);
-
-            g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString("Play", 800, 532);
 
@@ -277,6 +321,13 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 isGame = true;
                 reset();
                 repaint();
+            } else if (isMenu) {
+                for (int i = 0; i < songButtons.size(); i++) {
+                    if (songButtons.get(i).contains(location)) {
+                        selectedSong = i;
+                        repaint();
+                    }
+                }
             }
 
         }
@@ -508,13 +559,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         animCount = 0;
         close = true;
 
-        curTime = -2000; //bus: 878000, override,shunran:-2000
-        song = load.getSong(songName);
+        curTime = -2000;
+        song = load.getSong(songNames.get(selectedSong));
         endTime = song.getLast().getHitTime() + 3000;
-        load.setMetaData(songName);
+        load.setMetaData(songNames.get(selectedSong));
         loadMusic();
         audio.setMicrosecondPosition((long) (curTime * 1000));
-
-        timer.start();
     }
 }
