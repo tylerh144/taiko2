@@ -11,7 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class DisplayPanel extends JPanel implements KeyListener, MouseListener, ActionListener {
+public class DisplayPanel extends JPanel implements KeyListener, MouseListener, ActionListener, MouseWheelListener {
     private Timer timer;
     private double curTime, endTime;
     private boolean isMenu, isEnd, isGame;
@@ -20,7 +20,6 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private Note currentNote;
     private int perf, good, miss, combo, maxCombo;
     private double accuracy;
-    private SongLoader load;
     private boolean close;
     private int animCount;
     private Clip audio;
@@ -34,8 +33,6 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     public DisplayPanel() {
         timer = new Timer(1, this);
 
-        load = new SongLoader();
-
         isMenu = true;
         isGame = false;
         isEnd = false;
@@ -46,10 +43,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         File songFolder = new File("Songs");
         File[] songs = songFolder.listFiles();
-        for (int i = 0; i < songs.length; i++) {
+        for (int i = 0; i < 2; i++) {
             Rectangle r = new Rectangle(580, 30 + 45*i, 420, 42);
-            load.setMetaData(songs[i].getName());
-            songList.add(new Song(load.getBg(), load.getBgRatio(), load.getTitle(), load.getArtist(), load.getMapper(), load.getAudioPath(), load.getSong(songs[i].getName()), r));
+            songList.add(new Song(songs[i].getName(), r));
         }
 
         selectedSong = songList.getFirst();
@@ -65,6 +61,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         addMouseListener(this);
         addKeyListener(this);
+        addMouseWheelListener(this);
         setFocusable(true);
         requestFocusInWindow();
 
@@ -129,7 +126,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             drawFade(g2d, missImg, missA, 132, (int) missY, 200, 200);
 
         } else if (isEnd) {
-            g2d.drawImage(selectedSong.getBg(), 0, 0, 1000, (int) (1000 * load.getBgRatio()),  null);
+            g2d.drawImage(selectedSong.getBg(), 0, 0, 1000, (int) (1000 * selectedSong.getBgRatio()),  null);
             g.setColor(Color.BLACK);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .3f));
             g2d.fillRect(0, 0, 1000, 600);
@@ -164,7 +161,6 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.drawString("Back", 125, 532);
 
 
-
             g.setFont(new Font("Arial", Font.BOLD, 300));
             String score;
             if (accuracy == 100) {
@@ -193,37 +189,51 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         } else if (isMenu) {
             audio.close();
             //bg
-            g2d.drawImage(selectedSong.getBg(), 0, 0, 1000, (int) (1000 * load.getBgRatio()),  null);
+            g2d.drawImage(selectedSong.getBg(), 0, 0, 1000, (int) (1000 * selectedSong.getBgRatio()),  null);
             g.setColor(Color.BLACK);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .3f));
             g2d.fillRect(0, 0, 1000, 600);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 
-            //selected song bar
-            g.setColor(Color.BLACK);
-            g.fillRect(0, 0, 500, 30);
-            g.setColor(Color.WHITE);
-            g.drawRect(0, 0, 500, 30);
-            g.setFont(new Font("Arial", Font.BOLD, 16));
-            g.drawString("Selected: " + selectedSong.getArtist() + " - " + selectedSong.getTitle(), 10, 20);
-
+            //song buttons
             for (int i = 0; i < songList.size(); i++) {
                 if (songList.get(i) == selectedSong) {
                     g.setColor(Color.decode("#349beb"));
                 } else {
                     g.setColor(Color.decode("#f09030"));
                 }
+                Rectangle button = songList.get(i).getButton();
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .8f));
-                g2d.fill(songList.get(i).getButton());
+                g2d.fill(button);
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
                 g.setColor(Color.WHITE);
-                g2d.draw(songList.get(i).getButton());
+                g2d.draw(button);
 
                 g.setFont(new Font("Arial", Font.BOLD, 16));
-                g.drawString(songList.get(i).getTitle(), 600, 50 + 45*i);
+                g.drawString(songList.get(i).getTitle(), 600, (int) (button.getY() + 20));
                 g.setFont(new Font("Arial", Font.PLAIN, 12));
-                g.drawString(songList.get(i).getArtist(), 600, 65 + 45*i);
+                g.drawString(songList.get(i).getArtist(), 600, (int) (button.getY() + 35));
             }
+
+            //selected song bar
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, 1000, 50);
+            g.fillRect(0, 500, 1000, 100);
+
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 16));
+            g.drawString("Selected: " + selectedSong.getArtist() + " - " + selectedSong.getTitle(), 10, 20);
+            int time = (int) (selectedSong.getChart().getLast().getHitTime() / 1000);
+            String minutes = "" + time / 60;
+            if (minutes.length() == 1) {
+                minutes = "0" + minutes;
+            }
+            String seconds = "" + time % 60;
+            if (seconds.length() == 1) {
+                seconds = "0" + seconds;
+            }
+            g.setFont(new Font("Arial", Font.PLAIN, 12));
+            g.drawString("Length: " + minutes + ":" + seconds + " Objects: " + selectedSong.getChart().size(), 10, 40);
 
 
             //play
@@ -234,8 +244,6 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g2d.draw(play);
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString("Play", 800, 532);
-
-            reset();
         }
 
 
@@ -339,6 +347,28 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
     @Override
     public void mouseExited(MouseEvent e) { }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        Point location = e.getPoint();
+        int dir = e.getWheelRotation();
+        Rectangle r = new Rectangle(580, 0, 420, 600);
+
+        if (r.contains(location) && isMenu) {
+            double firstY = songList.getFirst().getButton().getY();
+            double lastY = songList.getLast().getButton().getY();
+
+            if (firstY < 100 && dir == -1) {
+                for (Song s : songList) {
+                    s.getButton().setLocation(580, (int) (s.getButton().getY() + 10));
+                }
+            } else if (lastY > 400 && dir == 1) {
+                for (Song s : songList) {
+                    s.getButton().setLocation(580, (int) (s.getButton().getY() - 10));
+                }
+            }
+        }
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -557,11 +587,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         animCount = 0;
         close = true;
 
-        curTime = -2000;
         song = new ArrayList<>();
         song.addAll(selectedSong.getChart());
         endTime = song.getLast().getHitTime() + 3000;
         loadMusic();
+        curTime = endTime - 10000;
         audio.setMicrosecondPosition((long) (curTime * 1000));
     }
 }
