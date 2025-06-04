@@ -28,16 +28,13 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private float d1a, d2a, k1a, k2a, goodA, missA;
     private double missY;
     private Rectangle back, play;
-    private ArrayList<Rectangle> songButtons;
-    private ArrayList<String> songNames;
-    private int selectedSong;
+    private ArrayList<Song> songList;
+    private Song selectedSong;
 
     public DisplayPanel() {
         timer = new Timer(1, this);
 
         load = new SongLoader();
-
-        selectedSong = 0;
 
         isMenu = true;
         isGame = false;
@@ -45,16 +42,17 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         back = new Rectangle(25, 500, 250, 50);
         play = new Rectangle(725, 500, 250, 50);
-        songButtons = new ArrayList<>();
-        songNames = new ArrayList<>();
+        songList = new ArrayList<>();
 
         File songFolder = new File("Songs");
         File[] songs = songFolder.listFiles();
         for (int i = 0; i < songs.length; i++) {
             Rectangle r = new Rectangle(580, 30 + 45*i, 420, 42);
-            songButtons.add(r);
-            songNames.add(songs[i].getName());
+            load.setMetaData(songs[i].getName());
+            songList.add(new Song(load.getBg(), load.getBgRatio(), load.getTitle(), load.getArtist(), load.getMapper(), load.getAudioPath(), load.getSong(songs[i].getName()), r));
         }
+
+        selectedSong = songList.getFirst();
 
         try {
             goodImg = ImageIO.read(new File("Assets/good.png"));
@@ -129,12 +127,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
             drawFade(g2d, goodImg, goodA, 132, 75, 200, 200);
             drawFade(g2d, missImg, missA, 132, (int) missY, 200, 200);
-        }
 
-        if (isEnd) {
-            //END SCREEN DOES NOT REACH ON CERTAIN SONGS (shunran, override(?))
-
-            g2d.drawImage(load.getBg(), 0, 0, 1000, (int) (1000 * load.getBgRatio()),  null);
+        } else if (isEnd) {
+            g2d.drawImage(selectedSong.getBg(), 0, 0, 1000, (int) (1000 * load.getBgRatio()),  null);
             g.setColor(Color.BLACK);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .3f));
             g2d.fillRect(0, 0, 1000, 600);
@@ -147,9 +142,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.fillRect(0, 0, 1000, 80);
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 24));
-            g.drawString(load.getArtist() + " - " + load.getTitle(), 20, 25);
+            g.drawString(selectedSong.getArtist() + " - " + selectedSong.getTitle(), 20, 25);
             g.setFont(new Font("Arial", Font.BOLD, 16));
-            g.drawString("Beatmap by " + load.getMapper(), 20, 50);
+            g.drawString("Beatmap by " + selectedSong.getMapper(), 20, 50);
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString("Perfect: " + perf, 50, 140);
             g.drawString("Good: " + good, 50, 180);
@@ -194,14 +189,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 score = "D";
             }
             g.drawString(score, 600, 400);
-        }
 
-//ADD SONG SELECTION
-        if (isMenu) {
+        } else if (isMenu) {
             audio.close();
             //bg
-            load.setMetaData(songNames.get(selectedSong));
-            g2d.drawImage(load.getBg(), 0, 0, 1000, (int) (1000 * load.getBgRatio()),  null);
+            g2d.drawImage(selectedSong.getBg(), 0, 0, 1000, (int) (1000 * load.getBgRatio()),  null);
             g.setColor(Color.BLACK);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .3f));
             g2d.fillRect(0, 0, 1000, 600);
@@ -213,31 +205,29 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.setColor(Color.WHITE);
             g.drawRect(0, 0, 500, 30);
             g.setFont(new Font("Arial", Font.BOLD, 16));
-            g.drawString("Selected: " + load.getArtist() + " - " + load.getTitle(), 10, 20);
+            g.drawString("Selected: " + selectedSong.getArtist() + " - " + selectedSong.getTitle(), 10, 20);
 
-            //DISPLAY INFO AS BUTTONS(?)
-
-            for (int i = 0; i < songButtons.size(); i++) {
-                if (selectedSong == i) {
+            for (int i = 0; i < songList.size(); i++) {
+                if (songList.get(i) == selectedSong) {
                     g.setColor(Color.decode("#349beb"));
                 } else {
                     g.setColor(Color.decode("#f09030"));
                 }
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .8f));
-                g2d.fill(songButtons.get(i));
+                g2d.fill(songList.get(i).getButton());
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
                 g.setColor(Color.WHITE);
-                g2d.draw(songButtons.get(i));
+                g2d.draw(songList.get(i).getButton());
 
-                load.setMetaData(songNames.get(i));
                 g.setFont(new Font("Arial", Font.BOLD, 16));
-                g.drawString(load.getTitle(), 600, 50 + 45*i);
+                g.drawString(songList.get(i).getTitle(), 600, 50 + 45*i);
                 g.setFont(new Font("Arial", Font.PLAIN, 12));
-                g.drawString(load.getArtist(), 600, 65 + 45*i);
+                g.drawString(songList.get(i).getArtist(), 600, 65 + 45*i);
             }
 
 
             //play
+            //maybe change play when user clicks on selected button
             g.setColor(Color.MAGENTA);
             g2d.fill(play);
             g.setColor(Color.WHITE);
@@ -315,6 +305,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             if (back.contains(location) && isEnd) {
                 isEnd = false;
                 isMenu = true;
+                audio.close();
                 repaint();
             } else if (play.contains(location) && isMenu) {
                 isMenu = false;
@@ -322,9 +313,16 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 reset();
                 repaint();
             } else if (isMenu) {
-                for (int i = 0; i < songButtons.size(); i++) {
-                    if (songButtons.get(i).contains(location)) {
-                        selectedSong = i;
+                for (Song s : songList) {
+                    if (s.getButton().contains(location)) {
+                        selectedSong = s;
+
+                        //DOES NOT WORK CORRECTLY
+                        audio.stop();
+                        audio.close();
+                        loadMusic();
+                        audio.setMicrosecondPosition(0);
+                        audio.start();
                         repaint();
                     }
                 }
@@ -351,7 +349,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 curTime = audio.getMicrosecondPosition() / 1000.0;
             }
 
-            if (curTime >= 0 && !audio.isActive()) {
+            if (curTime >= 0 && !audio.isActive() && isGame) {
                 audio.start();
             }
 
@@ -382,7 +380,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private void drawLane(Graphics g) {
         //bg img
         Graphics2D g2d = (Graphics2D) g;
-        g2d.drawImage(load.getBg(), 0, 140, 1000, (int) (1000 * load.getBgRatio()),  null);
+        g2d.drawImage(selectedSong.getBg(), 0, 140, 1000, (int) (1000 * selectedSong.getBgRatio()),  null);
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .8f));
         g.setColor(Color.BLACK);
         g2d.fillRect(0, 250, 1000, 325);
@@ -532,7 +530,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     }
 
     private void loadMusic() {
-        File audioFile = new File(load.getAudioPath());
+        File audioFile = new File(selectedSong.getAudioPath());
         try {
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
             audio = AudioSystem.getClip();
@@ -560,9 +558,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         close = true;
 
         curTime = -2000;
-        song = load.getSong(songNames.get(selectedSong));
+        song = new ArrayList<>();
+        song.addAll(selectedSong.getChart());
         endTime = song.getLast().getHitTime() + 3000;
-        load.setMetaData(songNames.get(selectedSong));
         loadMusic();
         audio.setMicrosecondPosition((long) (curTime * 1000));
     }

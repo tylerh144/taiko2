@@ -9,6 +9,7 @@ public class SongLoader {
     private BufferedImage bg;
     private String audioPath;
     private String title, artist, mapper;
+    private int previewPoint;
 
     public SongLoader () {
     }
@@ -121,22 +122,22 @@ public class SongLoader {
         try {
             File myFile = new File("Songs/" + songName + "/data.osu");
             Scanner fileScanner = new Scanner(myFile);
-        while (!fileScanner.nextLine().equals("[Metadata]")) {
-            //skip until metadata
-        }
-        String str = fileScanner.nextLine();
-        String[] split = str.split(":");
-        title = split[1];
-        fileScanner.nextLine();
+            while (!fileScanner.nextLine().equals("[Metadata]")) {
+                //skip until metadata
+            }
+            String str = fileScanner.nextLine();
+            String[] split = str.split(":");
+            title = split[1];
+            fileScanner.nextLine();
 
-        str = fileScanner.nextLine();
-        split = str.split(":");
-        artist = split[1];
-        fileScanner.nextLine();
+            str = fileScanner.nextLine();
+            split = str.split(":");
+            artist = split[1];
+            fileScanner.nextLine();
 
-        str = fileScanner.nextLine();
-        split = str.split(":");
-        mapper = split[1];
+            str = fileScanner.nextLine();
+            split = str.split(":");
+            mapper = split[1];
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
         }
