@@ -26,7 +26,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private BufferedImage goodImg, missImg, drumIn, drumOut;
     private float d1a, d2a, k1a, k2a, goodA, missA;
     private double missY;
-    private Rectangle back, play;
+    private Rectangle back, play, songArea;
     private ArrayList<Song> songList;
     private Song selectedSong;
 
@@ -39,11 +39,12 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         back = new Rectangle(25, 500, 250, 50);
         play = new Rectangle(725, 500, 250, 50);
+        songArea = new Rectangle(580, 50, 420, 450);
         songList = new ArrayList<>();
 
         File songFolder = new File("Songs");
         File[] songs = songFolder.listFiles();
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < songs.length; i++) {
             Rectangle r = new Rectangle(580, 30 + 45*i, 420, 42);
             songList.add(new Song(songs[i].getName(), r));
         }
@@ -314,6 +315,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 isEnd = false;
                 isMenu = true;
                 audio.close();
+                reset();
                 repaint();
             } else if (play.contains(location) && isMenu) {
                 isMenu = false;
@@ -322,7 +324,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 repaint();
             } else if (isMenu) {
                 for (Song s : songList) {
-                    if (s.getButton().contains(location)) {
+                    if (s.getButton().contains(location) && songArea.contains(location)) {
                         selectedSong = s;
 
                         //DOES NOT WORK CORRECTLY
@@ -352,19 +354,18 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     public void mouseWheelMoved(MouseWheelEvent e) {
         Point location = e.getPoint();
         int dir = e.getWheelRotation();
-        Rectangle r = new Rectangle(580, 0, 420, 600);
 
-        if (r.contains(location) && isMenu) {
+        if (songArea.contains(location) && isMenu) {
             double firstY = songList.getFirst().getButton().getY();
             double lastY = songList.getLast().getButton().getY();
 
             if (firstY < 100 && dir == -1) {
                 for (Song s : songList) {
-                    s.getButton().setLocation(580, (int) (s.getButton().getY() + 10));
+                    s.getButton().setLocation(580, (int) (s.getButton().getY() + 20));
                 }
             } else if (lastY > 400 && dir == 1) {
                 for (Song s : songList) {
-                    s.getButton().setLocation(580, (int) (s.getButton().getY() - 10));
+                    s.getButton().setLocation(580, (int) (s.getButton().getY() - 20));
                 }
             }
         }
@@ -373,36 +374,38 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof Timer) {
-            if (!audio.isActive()) {
-                curTime += 10;
-            } else {
-                curTime = audio.getMicrosecondPosition() / 1000.0;
-            }
-
-            if (curTime >= 0 && !audio.isActive() && isGame) {
-                audio.start();
-            }
-
-            if (curTime > endTime) {
-                isEnd = true;
-                isGame = false;
-            }
-
-            if (combo >= 50) {
-                animCount++;
-                if (animCount == 20) {
-                    close = !close;
-                    animCount = 0;
+            if (isGame) {
+                if (!audio.isActive()) {
+                    curTime += 10;
+                } else {
+                    curTime = audio.getMicrosecondPosition() / 1000.0;
                 }
-            }
 
-            k1a *= .5f;
-            k2a *= .5f;
-            d1a *= .5f;
-            d2a *= .5f;
-            goodA *= .85f;
-            missA *= .8f;
-            missY += .5;
+                if (curTime >= 0 && !audio.isActive()) {
+                    audio.start();
+                }
+
+                if (curTime > endTime) {
+                    isEnd = true;
+                    isGame = false;
+                }
+
+                if (combo >= 50) {
+                    animCount++;
+                    if (animCount == 20) {
+                        close = !close;
+                        animCount = 0;
+                    }
+                }
+
+                k1a *= .5f;
+                k2a *= .5f;
+                d1a *= .5f;
+                d2a *= .5f;
+                goodA *= .85f;
+                missA *= .8f;
+                missY += .5;
+            }
             repaint();
         }
     }
@@ -589,9 +592,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         song = new ArrayList<>();
         song.addAll(selectedSong.getChart());
-        endTime = song.getLast().getHitTime() + 3000;
+        endTime = song.getLast().getHitTime() + 2000;
         loadMusic();
-        curTime = endTime - 10000;
+        curTime = -2000;
         audio.setMicrosecondPosition((long) (curTime * 1000));
     }
 }
