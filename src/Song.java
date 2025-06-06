@@ -9,15 +9,16 @@ import java.util.ArrayList;
 public class Song {
     private BufferedImage bg;
     private double bgRatio;
-    private String title, artist, mapper, audioPath;
+    private String title, artist, mapper, audioPath, starRating;
     private ArrayList<Note> chart;
     private Rectangle button;
     private int previewPoint;
 
-    public Song(String path, Rectangle r) {
+    public Song(String path, Rectangle r, String sr) {
         parseData(path);
         audioPath = "Songs/" + path + "/audio.wav";
         button = r;
+        starRating = sr;
         try {
             bg = ImageIO.read(new File("Songs/" + path + "/bg.jpg"));
         } catch (IOException e) {
@@ -42,6 +43,10 @@ public class Song {
 
     public String getMapper() {
         return mapper;
+    }
+
+    public String getStarRating() {
+        return starRating;
     }
 
     public double getBgRatio() {

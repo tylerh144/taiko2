@@ -39,14 +39,16 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         back = new Rectangle(25, 500, 250, 50);
         play = new Rectangle(725, 500, 250, 50);
-        songArea = new Rectangle(580, 50, 420, 450);
+        songArea = new Rectangle(550, 50, 450, 450);
         songList = new ArrayList<>();
 
         File songFolder = new File("Songs");
         File[] songs = songFolder.listFiles();
         for (int i = 0; i < songs.length; i++) {
-            Rectangle r = new Rectangle(580, 30 + 45*i, 420, 42);
-            songList.add(new Song(songs[i].getName(), r));
+            Rectangle r = new Rectangle(550, 30 + 45*i, 460, 42);
+            String path = songs[i].getName();
+            String[] split = path.split("-");
+            songList.add(new Song(path, r, split[0]));
         }
 
         selectedSong = songList.getFirst();
@@ -198,12 +200,13 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
             //song buttons
             for (int i = 0; i < songList.size(); i++) {
-                if (songList.get(i) == selectedSong) {
+                Song s = songList.get(i);
+                if (s == selectedSong) {
                     g.setColor(Color.decode("#349beb"));
                 } else {
                     g.setColor(Color.decode("#f09030"));
                 }
-                Rectangle button = songList.get(i).getButton();
+                Rectangle button = s.getButton();
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .8f));
                 g2d.fill(button);
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
@@ -211,9 +214,10 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 g2d.draw(button);
 
                 g.setFont(new Font("Arial", Font.BOLD, 16));
-                g.drawString(songList.get(i).getTitle(), 600, (int) (button.getY() + 20));
+                g.drawString(s.getTitle(), 600, (int) (button.getY() + 20));
+                g.drawString(s.getStarRating(), 560, (int) (button.getY() + 28));
                 g.setFont(new Font("Arial", Font.PLAIN, 12));
-                g.drawString(songList.get(i).getArtist(), 600, (int) (button.getY() + 35));
+                g.drawString(s.getArtist() + " // " + s.getMapper(), 600, (int) (button.getY() + 35));
             }
 
             //selected song bar
@@ -361,11 +365,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
             if (firstY < 100 && dir == -1) {
                 for (Song s : songList) {
-                    s.getButton().setLocation(580, (int) (s.getButton().getY() + 20));
+                    s.getButton().setLocation(550, (int) (s.getButton().getY() + 20));
                 }
             } else if (lastY > 400 && dir == 1) {
                 for (Song s : songList) {
-                    s.getButton().setLocation(580, (int) (s.getButton().getY() - 20));
+                    s.getButton().setLocation(550, (int) (s.getButton().getY() - 20));
                 }
             }
         }
