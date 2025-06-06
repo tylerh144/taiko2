@@ -45,7 +45,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         File songFolder = new File("Songs");
         File[] songs = songFolder.listFiles();
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < songs.length; i++) {
             Rectangle r = new Rectangle(550, 30 + 45*i, 460, 42);
             String path = songs[i].getName();
             String[] split = path.split("-");
@@ -468,6 +468,15 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.drawString("Accuracy: " + accuracy + "%", 200, 25);
         g.drawString("Max Combo: " + maxCombo + "x", 200, 50);
         g.drawString("Current Time: " + curTime, 200, 75);
+
+        if (curTime > 0) {
+            g.setColor(Color.WHITE);
+            g.fillArc(900, 25, 50, 50, 90, (int) (curTime/endTime * -360));
+        }
+        g.setColor(Color.GRAY);
+        g2d.setStroke(new BasicStroke(2));
+        g.drawOval(900, 25, 50, 50);
+        g2d.setStroke(new BasicStroke(1));
 
         //hit indicator
         g.setColor(Color.BLACK);
