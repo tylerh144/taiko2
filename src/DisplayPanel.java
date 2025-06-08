@@ -41,7 +41,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         isEnd = false;
 
         back = new Rectangle(25, 500, 250, 50);
-        play = new Rectangle(725, 500, 250, 50);
+        play = new Rectangle(700, 500, 250, 50);
         resume = new Rectangle(375, 165, 250, 50);
         songArea = new Rectangle(550, 50, 450, 450);
         songList = new ArrayList<>();
@@ -161,7 +161,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 
             //top bar
-            g.fillRect(0, 0, 1000, 80);
+            g.fillRect(0, 0, 1000, 60);
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString(selectedSong.getArtist() + " - " + selectedSong.getTitle(), 20, 25);
@@ -213,7 +213,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         } else if (isMenu) {
             audio.close();
-            play.setLocation(725, 500);
+            play.setLocation(700, 500);
             //bg
             g2d.drawImage(selectedSong.getBg(), 0, 0, 1000, (int) (1000 * selectedSong.getBgRatio()),  null);
             g.setColor(Color.BLACK);
@@ -245,8 +245,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
             //selected song bar
             g.setColor(Color.BLACK);
-            g.fillRect(0, 0, 1000, 50);
-            g.fillRect(0, 500, 1000, 100);
+            g.fillRect(0, 0, 1000, 60);
+            g.fillRect(0, 490, 1000, 110);
 
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 16));

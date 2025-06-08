@@ -98,7 +98,7 @@ public class Note {
     }
 
     public void move(double curTime) {
-        xPos = 990 - (curTime - spawnTime) * velocity;
+        xPos = 1000 - (curTime - spawnTime) * velocity;
     }
 
     @Override
