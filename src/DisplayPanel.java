@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class DisplayPanel extends JPanel implements KeyListener, MouseListener, ActionListener, MouseWheelListener {
     private Timer timer;
-    private double curTime, endTime, lastPauseTime;
+    private double curTime, startTime, endTime, lastPauseTime;
     private boolean isMenu, isEnd, isGame, paused;
     private boolean d1Down, d2Down, k1Down, k2Down;
     private ArrayList<Note> song;
@@ -45,7 +45,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         File songFolder = new File("Songs");
         File[] songs = songFolder.listFiles();
-        for (int i = 0; i < songs.length; i++) {
+        for (int i = 14; i < 18; i++) {
             Rectangle r = new Rectangle(550, 30 + 45*i, 460, 42);
             String path = songs[i].getName();
             String[] split = path.split("-");
@@ -447,7 +447,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private void drawLane(Graphics g) {
         //bg img
         Graphics2D g2d = (Graphics2D) g;
-        g2d.drawImage(selectedSong.getBg(), 0, 140, 1000, (int) (1000 * selectedSong.getBgRatio()),  null);
+        g2d.drawImage(selectedSong.getBg(), 0, 120 + selectedSong.getyOffset(), 1000, (int) (1000 * selectedSong.getBgRatio()),  null);
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .8f));
         g.setColor(Color.BLACK);
         g2d.fillRect(0, 250, 1000, 325);
@@ -456,6 +456,10 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         //note lane
         g.setColor(Color.decode("#111111"));
         g.fillRect(0, 100, 1000, 150);
+        g2d.setStroke(new BasicStroke(5));
+        g.setColor(Color.BLACK);
+        g.drawRect(0, 100, 1000, 150);
+        g2d.setStroke(new BasicStroke(1));
 
         //stats
         g.setColor(Color.BLACK);
@@ -469,19 +473,20 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.drawString("Max Combo: " + maxCombo + "x", 200, 50);
         g.drawString("Current Time: " + curTime, 200, 75);
 
-        if (curTime > 0) {
-            g.setColor(Color.WHITE);
-            g.fillArc(900, 25, 50, 50, 90, (int) (curTime/endTime * -360));
+        if (curTime > startTime) {
+            g.setColor(Color.LIGHT_GRAY);
+            g.fillArc(900, 25, 50, 50, 90, (int) ((curTime-startTime)/(endTime-startTime) * -360));
+        } else {
+            g.setColor(Color.GREEN);
+            g.fillArc(900, 25, 50, 50, 90, (int) (((curTime-startTime)/(-2000-startTime))  * 360));
         }
-        g.setColor(Color.GRAY);
+        g.setColor(Color.WHITE);
         g2d.setStroke(new BasicStroke(2));
         g.drawOval(900, 25, 50, 50);
+        g.drawOval(924, 49, 2, 2);
         g2d.setStroke(new BasicStroke(1));
 
         //hit indicator
-        g.setColor(Color.BLACK);
-        g.drawRect(0, 100, 1000, 150);
-
         g.setColor(Color.WHITE);
         g.drawOval(192, 135, 80, 80);
 
@@ -621,8 +626,13 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         d2Down = false;
         k1Down = false;
         k2Down = false;
+        d1a = 0;
+        d2a = 0;
+        k1a = 0;
+        k2a = 0;
+        goodA = 0;
+        missA = 0;
 
-        currentNote = null;
         perf = 0;
         good = 0;
         miss = 0;
@@ -635,7 +645,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         song = new ArrayList<>();
         song.addAll(selectedSong.getChart());
+        startTime = song.getFirst().getSpawnTime();
         endTime = song.getLast().getHitTime() + 2000;
+        currentNote = song.getFirst();
         loadMusic();
         curTime = -2000;
         paused = false;

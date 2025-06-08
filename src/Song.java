@@ -9,6 +9,7 @@ import java.util.ArrayList;
 public class Song {
     private BufferedImage bg;
     private double bgRatio;
+    private int yOffset;
     private String title, artist, mapper, audioPath, starRating;
     private ArrayList<Note> chart;
     private Rectangle button;
@@ -51,6 +52,10 @@ public class Song {
 
     public double getBgRatio() {
         return bgRatio;
+    }
+
+    public int getyOffset() {
+        return yOffset;
     }
 
     public String getAudioPath() {
@@ -103,7 +108,6 @@ public class Song {
             split = str.split(":");
             mapper = split[1];
 
-            //MAYBE ADD OVERALL DIFFICULTY
             while (!fileScanner.nextLine().equals("[Difficulty]")) {
                 //skip until sliderMult
             }
@@ -112,8 +116,19 @@ public class Song {
             }
             str = fileScanner.nextLine();
             split = str.split(":");
-
             double sliderMult = Double.parseDouble(split[1]);
+
+            while (!fileScanner.nextLine().equals("[Events]")) {
+                //skip until bg offset
+            }
+            fileScanner.nextLine();
+            str = fileScanner.nextLine();
+            split = str.split(",");
+            if (split.length == 3) {
+                str = fileScanner.nextLine();
+                split = str.split(",");
+            }
+            yOffset = Integer.parseInt(split[4]);
 
             while (!fileScanner.nextLine().equals("[TimingPoints]")) {
                 //skip until timingpoints
