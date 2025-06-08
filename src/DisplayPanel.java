@@ -6,6 +6,8 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +25,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private boolean close;
     private int animCount;
     private Clip audio;
-    private BufferedImage goodImg, missImg, drumIn, drumOut;
+    private BufferedImage goodImg, missImg, drumIn, drumOut, spinnerCircle, spinnerHand;
+    private int spinnerVelocity, spinnerAngle, lastHit;
     private float d1a, d2a, k1a, k2a, goodA, missA;
     private double missY;
     private Rectangle back, play, songArea, resume;
@@ -45,7 +48,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
         File songFolder = new File("Songs");
         File[] songs = songFolder.listFiles();
-        for (int i = 14; i < 18; i++) {
+        for (int i = 0; i < songs.length; i++) {
             Rectangle r = new Rectangle(550, 30 + 45*i, 460, 42);
             String path = songs[i].getName();
             String[] split = path.split("-");
@@ -59,6 +62,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             missImg = ImageIO.read(new File("Assets/miss.png"));
             drumIn = ImageIO.read(new File("Assets/taiko-drum-inner.png"));
             drumOut = ImageIO.read(new File("Assets/taiko-drum-outer.png"));
+            spinnerCircle = ImageIO.read(new File("Assets/spinner-approachcircle.png"));
+            spinnerHand = ImageIO.read(new File("Assets/spinner-circle.png"));
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -87,39 +92,40 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 for (int i = song.size() - 1; i >= 0; i--) {
                     if (!song.isEmpty()) {
                         Note n = song.get(i);
-                        if (n.getHitTime() < curTime - 100) {
+                        if (n.getHitTime() < curTime - 100 && !(n instanceof Spinner)) {
                             song.remove(i);
-                            miss++;
-                            animCount = 0;
-                            close = true;
-                            missA = 8f;
-                            missY = 75;
-                            if (combo > maxCombo) {
-                                maxCombo = combo;
-                            }
-                            if (combo >= 50) {
-                                File audioFile = new File("Assets/sound_combobreak.wav");
-                                try {
-                                    AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
-                                    Clip clip = AudioSystem.getClip();
-                                    clip.open(audioStream);
-                                    clip.start();
-                                } catch (Exception e) {
-                                    System.out.println(e.getMessage());
-                                }
-                            }
-                            combo = 0;
+                            miss();
                             i++;
                         } else if (curTime >= n.getSpawnTime()) {
-
+                            n.move(curTime);
                             if (n.isBig()) {
                                 g2d.drawImage(n.getImg(close), (int) n.getxPos() - 19, 124, 106, 106, null);
                             } else {
                                 g2d.drawImage(n.getImg(close), (int) n.getxPos(), 143, 64, 64, null);
-
                             }
-                            n.move(curTime);
                         }
+                    }
+                }
+                if (currentNote instanceof Spinner s && curTime >= currentNote.getHitTime()) {
+                    //spinner approach
+                    int d = (int) (300 * (s.getEndTime() - curTime) / ((s.getEndTime()) - s.getHitTime()));
+                    g2d.drawImage(spinnerCircle, (int) (400 - d / 2.0), (int) (250 - d / 2.0), d, d, null);
+
+                    //spinner hand
+                    //https://stackoverflow.com/a/64960185 (image rotation)
+                    AffineTransform tr = new AffineTransform();
+                    tr.translate(250, 100);
+                    tr.rotate(Math.toRadians(spinnerAngle), 150, 150);
+                    g2d.drawImage(spinnerHand, tr, null);
+
+                    g.setFont(new Font("Arial", Font.BOLD, 32));
+                    g.setColor(Color.WHITE);
+                    g.drawString("" + s.getTicks(), 375, 400);
+
+                    if (curTime > s.getEndTime()) {
+                        miss();
+                        s.resetTicks();
+                        newFirst();
                     }
                 }
             }
@@ -278,7 +284,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
-        if (isGame) {
+        if (isGame && !paused) {
             if (curTime <= audio.getMicrosecondLength() / 1000.0) {
                 if (key == KeyEvent.VK_F) {
                     if (!d1Down) {
@@ -439,6 +445,13 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 goodA *= .85f;
                 missA *= .8f;
                 missY += .5;
+
+                if (currentNote instanceof Spinner) {
+                    spinnerAngle += spinnerVelocity;
+                    if (spinnerVelocity > 0) {
+                        spinnerVelocity -= 3;
+                    }
+                }
             }
             repaint();
         }
@@ -477,7 +490,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.setColor(Color.LIGHT_GRAY);
             g.fillArc(900, 25, 50, 50, 90, (int) ((curTime-startTime)/(endTime-startTime) * -360));
         } else {
-            g.setColor(Color.GREEN);
+            g.setColor(Color.decode("#70c416"));
             g.fillArc(900, 25, 50, 50, 90, (int) (((curTime-startTime)/(-2000-startTime))  * 360));
         }
         g.setColor(Color.WHITE);
@@ -536,53 +549,43 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
     }
 
-//CHANGE HIT WINDOWS
     private void hit(int keyColor) {
         if (!song.isEmpty() && curTime > 0) {
             double curHit = currentNote.getHitTime();
             int noteColor = currentNote.getColor();
-            if (keyColor == noteColor) {
-                if (curHit < curTime + 40 && curHit > curTime - 40) {
-                    perf++;
-                    combo++;
-                    song.removeFirst();
-                    if (!song.isEmpty()) {
-                        currentNote = song.getFirst();
-                    }
-                } else if (curHit < curTime + 80 && curHit > curTime - 80) {
-                    good++;
-                    combo++;
-                    goodA = 2f;
-                    song.removeFirst();
-                    if (!song.isEmpty()) {
-                        currentNote = song.getFirst();
+            if (currentNote instanceof Spinner curSpinner) {
+                if (curTime >= curHit) {
+                    if (keyColor != lastHit || curSpinner.getTicks() == curSpinner.getMaxTicks()) {
+                        curSpinner.tickDown();
+                        spinnerVelocity = 60;
+                        lastHit = keyColor;
+                        if (curSpinner.getTicks() <= 0) {
+                            curSpinner.resetTicks();
+                            perf++;
+                            combo++;
+                            newFirst();
+                        }
                     }
                 }
-            } else if (curHit < curTime + 100 && curHit > curTime - 100) {
-                miss++;
-                animCount = 0;
-                close = true;
-                missA = 8f;
-                missY = 75;
-                if (combo >= 50) {
-                    File audioFile = new File("Assets/sound_combobreak.wav");
-                    try {
-                        AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
-                        Clip clip = AudioSystem.getClip();
-                        clip.open(audioStream);
-                        clip.start();
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
+            } else {
+                if (keyColor == noteColor) {
+                    if (curHit < curTime + 40 && curHit > curTime - 40) {
+                        perf++;
+                        combo++;
+                        newFirst();
+                    } else if (curHit < curTime + 80 && curHit > curTime - 80) {
+                        good++;
+                        combo++;
+                        goodA = 2f;
+                        newFirst();
                     }
+                } else if (curHit < curTime + 100 && curHit > curTime - 100) {
+                    miss();
+                    newFirst();
                 }
-                combo = 0;
-                song.removeFirst();
-                if (!song.isEmpty()) {
-                    currentNote = song.getFirst();
+                if (combo > maxCombo) {
+                    maxCombo = combo;
                 }
-            }
-            if (combo > maxCombo) {
-                maxCombo = combo;
             }
         }
 
@@ -600,6 +603,33 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             clip.start();
         } catch (Exception e) {
             System.out.println(e.getMessage());
+        }
+    }
+
+    private void miss() {
+        miss++;
+        animCount = 0;
+        close = true;
+        missA = 8f;
+        missY = 75;
+        if (combo >= 50) {
+            File audioFile = new File("Assets/sound_combobreak.wav");
+            try {
+                AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+                Clip clip = AudioSystem.getClip();
+                clip.open(audioStream);
+                clip.start();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        combo = 0;
+    }
+
+    private void newFirst() {
+        song.removeFirst();
+        if (!song.isEmpty()) {
+            currentNote = song.getFirst();
         }
     }
 
@@ -632,6 +662,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         k2a = 0;
         goodA = 0;
         missA = 0;
+        spinnerVelocity = 0;
+        spinnerAngle = 0;
 
         perf = 0;
         good = 0;
@@ -646,7 +678,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         song = new ArrayList<>();
         song.addAll(selectedSong.getChart());
         startTime = song.getFirst().getSpawnTime();
-        endTime = song.getLast().getHitTime() + 2000;
+        if (song.getLast() instanceof Spinner s) {
+            endTime = s.getEndTime() + 2000;
+        } else {
+            endTime = song.getLast().getHitTime() + 2000;
+        }
         currentNote = song.getFirst();
         loadMusic();
         curTime = -2000;

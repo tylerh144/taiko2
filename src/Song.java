@@ -163,17 +163,17 @@ public class Song {
                 String[] splitData = data.split(",");
                 double hitTime = Double.parseDouble(splitData[2]);
                 int color = Integer.parseInt(splitData[4]);
-                if (splitData.length == 7) {
-                    color = Integer.parseInt(splitData[5]);
-                }
                 double velocity = 0;
                 for (Double[] array : timeVelocity) {
                     if (hitTime >= array[0]) {
                         velocity = array[1];
                     }
                 }
-                Note n = new Note(hitTime, color, velocity);
-                chart.add(n);
+                if (splitData.length == 6) {
+                    chart.add(new Note(hitTime, color, velocity));
+                } else {
+                    chart.add(new Spinner(hitTime, Integer.parseInt(splitData[5]), velocity));
+                }
             }
         } catch (IOException exception) {
             System.out.println(exception.getMessage());

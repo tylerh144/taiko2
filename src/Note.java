@@ -17,7 +17,6 @@ public class Note {
         this.hitTime = hitTime;
         spawnTime = hitTime - 224000.0 / velocity;
         this.velocity = velocity * .005 / 1.4;
-        xPos = 1000;
 
         if (color == 0) {
             this.color = 0;
@@ -56,11 +55,10 @@ public class Note {
                 System.out.println(e.getMessage());
             }
         } else {
-            //maybe remove spinners and sliders??????
+            //spinner super
             this.color = -1;
             big = true;
             //color = endhittime
-            //maybe Spinner extends Note
             try {
                 img = ImageIO.read(new File("Assets/spinner-warning.png"));
                 img1 = img;
@@ -70,16 +68,13 @@ public class Note {
         }
     }
 
+
     public double getHitTime() {
         return hitTime;
     }
 
     public double getSpawnTime() {
         return spawnTime;
-    }
-
-    public double getVelocity() {
-        return velocity;
     }
 
     public double getxPos() {
