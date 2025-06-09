@@ -7,7 +7,6 @@ import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -75,6 +74,10 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         requestFocusInWindow();
 
         reset();
+        audio.setMicrosecondPosition(selectedSong.getPreviewPoint() * 1000L);
+        audio.setLoopPoints(audio.getFramePosition(), -1);
+        audio.loop(Clip.LOOP_CONTINUOUSLY);
+        audio.start();
         timer.start();
     }
 
@@ -125,6 +128,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                     if (curTime > s.getEndTime()) {
                         miss();
                         s.resetTicks();
+                        spinnerAngle = 0;
+                        spinnerVelocity = 0;
                         newFirst();
                     }
                 }
@@ -212,7 +217,6 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.drawString(score, 600, 400);
 
         } else if (isMenu) {
-            audio.close();
             play.setLocation(700, 500);
             //bg
             g2d.drawImage(selectedSong.getBg(), 0, 0, 1000, (int) (1000 * selectedSong.getBgRatio()),  null);
@@ -366,7 +370,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                         audio.stop();
                         audio.close();
                         loadMusic();
-                        audio.setMicrosecondPosition(0);
+                        audio.setMicrosecondPosition(selectedSong.getPreviewPoint() * 1000L);
+                        audio.setLoopPoints(audio.getFramePosition(), -1);
+                        audio.loop(Clip.LOOP_CONTINUOUSLY);
                         audio.start();
                         repaint();
                     }
@@ -684,10 +690,15 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             endTime = song.getLast().getHitTime() + 2000;
         }
         currentNote = song.getFirst();
-        loadMusic();
         curTime = -2000;
         paused = false;
         lastPauseTime = -10000;
+
+        if (audio != null && audio.isOpen()) {
+            audio.stop();
+            audio.close();
+        }
+        loadMusic();
         audio.setMicrosecondPosition((long) (curTime * 1000));
     }
 }
