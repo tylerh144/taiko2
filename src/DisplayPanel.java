@@ -95,7 +95,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 for (int i = song.size() - 1; i >= 0; i--) {
                     if (!song.isEmpty()) {
                         Note n = song.get(i);
-                        if (n.getHitTime() < curTime - 100 && !(n instanceof Spinner)) {
+                        if (n.getHitTime() < curTime - 90 && !(n instanceof Spinner)) {
                             song.remove(i);
                             miss();
                             i++;
@@ -353,7 +353,13 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 isGame = false;
                 isMenu = true;
                 audio.close();
+
                 reset();
+                audio.setMicrosecondPosition(selectedSong.getPreviewPoint() * 1000L);
+                audio.setLoopPoints(audio.getFramePosition(), -1);
+                audio.loop(Clip.LOOP_CONTINUOUSLY);
+                audio.start();
+
                 repaint();
             } else if (play.contains(location) && (isMenu || paused)) {
                 isMenu = false;
@@ -490,7 +496,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.drawString("Miss: " + miss, 50, 75);
         g.drawString("Accuracy: " + accuracy + "%", 200, 25);
         g.drawString("Max Combo: " + maxCombo + "x", 200, 50);
-        g.drawString("Current Time: " + curTime, 200, 75);
+        g.drawString("Current Time: " + (int) curTime, 200, 75);
 
         if (curTime > startTime) {
             g.setColor(Color.LIGHT_GRAY);
@@ -575,17 +581,17 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 }
             } else {
                 if (keyColor == noteColor) {
-                    if (curHit < curTime + 40 && curHit > curTime - 40) {
+                    if (curHit < curTime + 32 && curHit > curTime - 32) {
                         perf++;
                         combo++;
                         newFirst();
-                    } else if (curHit < curTime + 80 && curHit > curTime - 80) {
+                    } else if (curHit < curTime + 72 && curHit > curTime - 72) {
                         good++;
                         combo++;
                         goodA = 2f;
                         newFirst();
                     }
-                } else if (curHit < curTime + 100 && curHit > curTime - 100) {
+                } else if (curHit < curTime + 90 && curHit > curTime - 90) {
                     miss();
                     newFirst();
                 }
