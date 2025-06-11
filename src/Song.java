@@ -5,7 +5,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Scanner;
 import java.util.ArrayList;
 
 public class Song extends Thread {
@@ -16,7 +15,7 @@ public class Song extends Thread {
     private ArrayList<Note> chart;
     private Rectangle button;
     private int previewPoint;
-    private double od;
+    private double od, bpm;
     private String path;
 
     public Song(String path, Rectangle r, String sr) {
@@ -65,6 +64,10 @@ public class Song extends Thread {
 
     public double getOd() {
         return od;
+    }
+
+    public double getBpm() {
+        return bpm;
     }
 
     public double getBgRatio() {
@@ -177,6 +180,7 @@ public class Song extends Thread {
                     timeVelocity.add(new Double[]{hitTime, velocity, kiai});
                 }
             }
+            bpm = timeVelocity.getFirst()[1] / sliderMult;
 
             br.readLine();
             br.readLine();
