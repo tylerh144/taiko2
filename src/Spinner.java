@@ -3,8 +3,8 @@ public class Spinner extends Note {
     private int ticks;
     private final int TICKS;
 
-    public Spinner(double hitTime, int spinnerEndTime, double velocity) {
-        super(hitTime, spinnerEndTime, velocity);
+    public Spinner(double hitTime, int spinnerEndTime, double velocity, boolean kiai) {
+        super(hitTime, spinnerEndTime, velocity, kiai);
         this.endTime = spinnerEndTime;
         TICKS = (int) ((spinnerEndTime - hitTime) / 120);
         ticks = TICKS;
