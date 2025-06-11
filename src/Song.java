@@ -14,6 +14,7 @@ public class Song {
     private ArrayList<Note> chart;
     private Rectangle button;
     private int previewPoint;
+    private double od;
 
     public Song(String path, Rectangle r, String sr) {
         parseData(path);
@@ -48,6 +49,10 @@ public class Song {
 
     public String getStarRating() {
         return starRating;
+    }
+
+    public double getOd() {
+        return od;
     }
 
     public double getBgRatio() {
@@ -111,9 +116,15 @@ public class Song {
             while (!fileScanner.nextLine().equals("[Difficulty]")) {
                 //skip until sliderMult
             }
-            for (int i = 0; i < 4; i++) {
-                fileScanner.nextLine();
-            }
+            fileScanner.nextLine();
+            fileScanner.nextLine();
+
+            str = fileScanner.nextLine();
+            split = str.split(":");
+            od = Double.parseDouble(split[1]);
+            fileScanner.nextLine();
+
+
             str = fileScanner.nextLine();
             split = str.split(":");
             double sliderMult = Double.parseDouble(split[1]);
@@ -150,8 +161,9 @@ public class Song {
                     } else {
                         velocity = timeVelocity.getFirst()[1] * (-100 / velocityMult);
                     }
+                    double kiai = Double.parseDouble(splitData[7]);
 
-                    timeVelocity.add(new Double[]{hitTime, velocity});
+                    timeVelocity.add(new Double[]{hitTime, velocity, kiai});
                 }
             }
 
@@ -164,15 +176,26 @@ public class Song {
                 double hitTime = Double.parseDouble(splitData[2]);
                 int color = Integer.parseInt(splitData[4]);
                 double velocity = 0;
-                for (Double[] array : timeVelocity) {
-                    if (hitTime >= array[0]) {
-                        velocity = array[1];
+                boolean kiai = false;
+                for (int i = timeVelocity.size()-1; i >= 0; i--) {
+                    Double[] arr = timeVelocity.get(i);
+                    if (hitTime >= arr[0]) {
+                        velocity = arr[1];
+                        if (arr[2] == 1) {
+                            kiai = true;
+                        }
+                        break;
                     }
                 }
+//                for (Double[] array : timeVelocity) {
+//                    if (hitTime >= array[0]) {
+//                        velocity = array[1];
+//                    }
+//                }
                 if (splitData.length == 6) {
-                    chart.add(new Note(hitTime, color, velocity));
+                    chart.add(new Note(hitTime, color, velocity, kiai));
                 } else {
-                    chart.add(new Spinner(hitTime, Integer.parseInt(splitData[5]), velocity));
+                    chart.add(new Spinner(hitTime, Integer.parseInt(splitData[5]), velocity, kiai));
                 }
             }
         } catch (IOException exception) {

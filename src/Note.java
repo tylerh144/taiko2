@@ -6,17 +6,16 @@ import java.io.IOException;
 public class Note {
     private int color;
     private double velocity;
-    private boolean big;
-    private double hitTime;
-    private double spawnTime;
+    private boolean big, kiai;
+    private double hitTime, spawnTime;
     private double xPos;
-    private BufferedImage img;
-    private BufferedImage img1;
+    private BufferedImage img, img1;
 
-    public Note(double hitTime, int color, double velocity) {
+    public Note(double hitTime, int color, double velocity, boolean kiai) {
         this.hitTime = hitTime;
         spawnTime = hitTime - 224000.0 / velocity;
         this.velocity = velocity * .005 / 1.4;
+        this.kiai = kiai;
 
         if (color == 0) {
             this.color = 0;
@@ -45,7 +44,7 @@ public class Note {
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
-        } else if (color == 12) {
+        } else if (color == 12 || color == 6) {
             this.color = 1;
             big = true;
             try {
@@ -87,6 +86,10 @@ public class Note {
 
     public boolean isBig() {
         return big;
+    }
+
+    public boolean isKiai() {
+        return kiai;
     }
 
     public BufferedImage getImg(boolean first) {

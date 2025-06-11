@@ -15,12 +15,12 @@ import java.util.ArrayList;
 public class DisplayPanel extends JPanel implements KeyListener, MouseListener, ActionListener, MouseWheelListener {
     private Timer timer;
     private double curTime, startTime, endTime, lastPauseTime;
-    private boolean isMenu, isEnd, isGame, paused;
+    private boolean isMenu, isEnd, isGame, paused, hidden;
     private boolean d1Down, d2Down, k1Down, k2Down;
     private ArrayList<Note> song;
     private Note currentNote;
     private int perf, good, miss, combo, maxCombo;
-    private double accuracy;
+    private double accuracy, window;
     private boolean close;
     private int animCount;
     private Clip audio;
@@ -28,7 +28,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private int spinnerVelocity, spinnerAngle, lastHit;
     private float d1a, d2a, k1a, k2a, goodA, missA;
     private double missY;
-    private Rectangle back, play, songArea, resume;
+    private Rectangle back, play, songArea, resume, toggleHidden, toggleEasy;
     private ArrayList<Song> songList;
     private Song selectedSong;
 
@@ -39,16 +39,19 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         isGame = false;
         isEnd = false;
 
+        hidden = false;
+
         back = new Rectangle(25, 500, 250, 50);
         play = new Rectangle(700, 500, 250, 50);
         resume = new Rectangle(375, 165, 250, 50);
-        songArea = new Rectangle(550, 50, 450, 450);
+        songArea = new Rectangle(530, 50, 470, 450);
+        toggleHidden = new Rectangle(25, 500, 50, 50);
         songList = new ArrayList<>();
 
         File songFolder = new File("Songs");
         File[] songs = songFolder.listFiles();
         for (int i = 0; i < songs.length; i++) {
-            Rectangle r = new Rectangle(550, 30 + 45*i, 460, 42);
+            Rectangle r = new Rectangle(530, 30 + 45*i, 460, 42);
             String path = songs[i].getName();
             String[] split = path.split("-");
             songList.add(new Song(path, r, split[0]));
@@ -95,17 +98,36 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 for (int i = song.size() - 1; i >= 0; i--) {
                     if (!song.isEmpty()) {
                         Note n = song.get(i);
-                        if (n.getHitTime() < curTime - 90 && !(n instanceof Spinner)) {
+                        if (n.getHitTime() < curTime - 2.8*window && !(n instanceof Spinner)) {
                             song.remove(i);
                             miss();
                             i++;
                         } else if (curTime >= n.getSpawnTime()) {
                             n.move(curTime);
-                            if (n.isBig()) {
-                                g2d.drawImage(n.getImg(close), (int) n.getxPos() - 19, 124, 106, 106, null);
-                            } else {
-                                g2d.drawImage(n.getImg(close), (int) n.getxPos(), 143, 64, 64, null);
+
+                            int x = (int) n.getxPos();
+
+                            if (hidden) {
+                                float alpha = 0;
+                                if (currentNote.isKiai()) {
+                                    alpha = (float) ((x - 400) / 350.0);
+                                } else {
+                                    alpha = (float) ((x - 500) / 250.0);
+                                }
+                                if (alpha <= 0) {
+                                    alpha = 0;
+                                } else if (alpha >= 1) {
+                                    alpha = 1;
+                                }
+                                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
                             }
+
+                            if (n.isBig()) {
+                                g2d.drawImage(n.getImg(close), x - 19, 124, 106, 106, null);
+                            } else {
+                                g2d.drawImage(n.getImg(close), x, 143, 64, 64, null);
+                            }
+                            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
                         }
                     }
                 }
@@ -133,6 +155,10 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                         newFirst();
                     }
                 }
+            }
+            if (hidden) {
+                g.setColor(Color.BLACK);
+                g.fillRect(750, 100, 250, 150);
             }
 
             drawDrum(g);
@@ -179,7 +205,10 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.drawString("Max Combo: " + maxCombo + "x", 50, 260);
             g.drawString("Accuracy: " + accuracy + "%", 50, 300);
 
-            if (miss == 0) {
+            if (perf == selectedSong.getChart().size()) {
+                g.setColor(Color.CYAN);
+                g.drawString("ALL PERFECT", 50, 340);
+            } else if (miss == 0) {
                 g.setColor(Color.MAGENTA);
                 g.drawString("FULL COMBO", 50, 340);
             }
@@ -190,16 +219,36 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g2d.draw(back);
             g.drawString("Back", 125, 532);
 
+            if (hidden) {
+                g.setColor(Color.decode("#6200ff"));
+                g.fillRect(520, 440, 50, 50);
+                g.setColor(Color.WHITE);
+                g.drawRect(520, 440, 50, 50);
+                g.drawString("HD", 528, 472);
+            }
 
+perf = 100;
             g.setFont(new Font("Arial", Font.BOLD, 300));
             String score;
-            if (accuracy == 100) {
-                g.setColor(Color.decode("#dba400"));
+            if (perf == selectedSong.getChart().size()) {
+                if (hidden) {
+                    g.setColor(Color.GRAY);
+                } else {
+                    g.setColor(Color.decode("#dba400"));
+                }
                 g.drawString("S", 620, 380);
-                g.setColor(Color.ORANGE);
+                if (hidden) {
+                    g.setColor(Color.LIGHT_GRAY);
+                } else {
+                    g.setColor(Color.ORANGE);
+                }
                 score = "S";
             } else if (miss == 0 && accuracy >= 95) {
-                g.setColor(Color.ORANGE);
+                if (hidden) {
+                    g.setColor(Color.LIGHT_GRAY);
+                } else {
+                    g.setColor(Color.ORANGE);
+                }
                 score = "S";
             } else if (accuracy >= 90) {
                 g.setColor(Color.GREEN);
@@ -240,9 +289,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 g.setColor(Color.WHITE);
                 g2d.draw(button);
 
-                g.setFont(new Font("Arial", Font.BOLD, 16));
+                g.setFont(new Font("Arial Unicode MS", Font.BOLD, 16));
                 g.drawString(s.getTitle(), 600, (int) (button.getY() + 20));
-                g.drawString(s.getStarRating(), 560, (int) (button.getY() + 28));
+                g.drawString(s.getStarRating() + "★", 540, (int) (button.getY() + 28));
                 g.setFont(new Font("Arial", Font.PLAIN, 12));
                 g.drawString(s.getArtist() + " // " + s.getMapper(), 600, (int) (button.getY() + 35));
             }
@@ -267,6 +316,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.setFont(new Font("Arial", Font.PLAIN, 12));
             g.drawString("Length: " + minutes + ":" + seconds + " Objects: " + selectedSong.getChart().size(), 10, 40);
 
+            g.setFont(new Font("Arial Unicode MS", Font.PLAIN, 10));
+            g.drawString("OD: " + selectedSong.getOd() + " Star Rating: " + selectedSong.getStarRating() + "★", 10, 54);
 
             //play
             //maybe change play when user clicks on selected button
@@ -276,6 +327,12 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g2d.draw(play);
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString("Play", 800, 532);
+
+            if (hidden) {
+                g.setColor(Color.decode("#6200ff"));
+            }
+            g2d.draw(toggleHidden);
+            g.drawString("HD", 33, 532);
         }
 
 
@@ -370,18 +427,26 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             } else if (isMenu) {
                 for (Song s : songList) {
                     if (s.getButton().contains(location) && songArea.contains(location)) {
-                        selectedSong = s;
-
-                        //DOES NOT WORK CORRECTLY
-                        audio.stop();
-                        audio.close();
-                        loadMusic();
-                        audio.setMicrosecondPosition(selectedSong.getPreviewPoint() * 1000L);
-                        audio.setLoopPoints(audio.getFramePosition(), -1);
-                        audio.loop(Clip.LOOP_CONTINUOUSLY);
-                        audio.start();
+                        if (s == selectedSong) {
+                            isMenu = false;
+                            isGame = true;
+                            isEnd = false;
+                            reset();
+                        } else {
+                            selectedSong = s;
+                            audio.stop();
+                            audio.close();
+                            loadMusic();
+                            audio.setMicrosecondPosition(selectedSong.getPreviewPoint() * 1000L);
+                            audio.setLoopPoints(audio.getFramePosition(), -1);
+                            audio.loop(Clip.LOOP_CONTINUOUSLY);
+                            audio.start();
+                        }
                         repaint();
                     }
+                }
+                if (toggleHidden.contains(location)) {
+                    hidden = !hidden;
                 }
             } else if (resume.contains(location) && paused) {
                 paused = false;
@@ -413,11 +478,11 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
             if (firstY < 100 && dir == -1) {
                 for (Song s : songList) {
-                    s.getButton().setLocation(550, (int) (s.getButton().getY() + 20));
+                    s.getButton().setLocation(530, (int) (s.getButton().getY() + 20));
                 }
             } else if (lastY > 400 && dir == 1) {
                 for (Song s : songList) {
-                    s.getButton().setLocation(550, (int) (s.getButton().getY() - 20));
+                    s.getButton().setLocation(530, (int) (s.getButton().getY() - 20));
                 }
             }
         }
@@ -485,6 +550,12 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         g.setColor(Color.BLACK);
         g.drawRect(0, 100, 1000, 150);
         g2d.setStroke(new BasicStroke(1));
+        if (currentNote.isKiai()) {
+            g.setColor(Color.CYAN);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .2f));
+            g.drawRect(0, 100, 1000, 150);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+        }
 
         //stats
         g.setColor(Color.BLACK);
@@ -523,7 +594,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         Graphics2D g2d = (Graphics2D) g;
 
         g.setColor(Color.BLACK);
-        g.fillRect(0, 100, 150, 150);
+        g.fillRect(0, 100, 150, 152);
 
         g.setColor(Color.DARK_GRAY);
         g.fillOval(25, 125, 100, 100);
@@ -575,23 +646,26 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                             curSpinner.resetTicks();
                             perf++;
                             combo++;
+                            if (combo > maxCombo) {
+                                maxCombo = combo;
+                            }
                             newFirst();
                         }
                     }
                 }
             } else {
                 if (keyColor == noteColor) {
-                    if (curHit < curTime + 32 && curHit > curTime - 32) {
+                    if (curHit < curTime + window && curHit > curTime - window) {
                         perf++;
                         combo++;
                         newFirst();
-                    } else if (curHit < curTime + 72 && curHit > curTime - 72) {
+                    } else if (curHit < curTime + 2*window && curHit > curTime - 2*window) {
                         good++;
                         combo++;
                         goodA = 2f;
                         newFirst();
                     }
-                } else if (curHit < curTime + 90 && curHit > curTime - 90) {
+                } else if (curHit < curTime + 2.8*window && curHit > curTime - 2.8*window) {
                     miss();
                     newFirst();
                 }
@@ -699,6 +773,8 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         curTime = -2000;
         paused = false;
         lastPauseTime = -10000;
+
+        window = 50 -  3 * selectedSong.getOd();
 
         if (audio != null && audio.isOpen()) {
             audio.stop();
