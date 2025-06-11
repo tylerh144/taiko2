@@ -1,12 +1,14 @@
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.ArrayList;
 
-public class Song {
+public class Song extends Thread {
     private BufferedImage bg;
     private double bgRatio;
     private int yOffset;
@@ -15,9 +17,10 @@ public class Song {
     private Rectangle button;
     private int previewPoint;
     private double od;
+    private String path;
 
     public Song(String path, Rectangle r, String sr) {
-        parseData(path);
+        this.path = path;
         audioPath = "Songs/" + path + "/audio.wav";
         button = r;
         starRating = sr;
@@ -27,6 +30,15 @@ public class Song {
             System.out.println(e.getMessage());
         }
         bgRatio = (double) bg.getHeight() / bg.getWidth();
+        start();
+    }
+
+    public void run() {
+        try {
+            parseData(path);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
 
@@ -84,71 +96,70 @@ public class Song {
         ArrayList<Double[]> timeVelocity = new ArrayList<>();
 
         try {
-            File myFile = new File("Songs/" + path + "/data.osu");
-            Scanner fileScanner = new Scanner(myFile);
+            BufferedReader br = new BufferedReader(new FileReader("Songs/" + path + "/data.osu"));
 
-            while (!fileScanner.nextLine().equals("[General]")) {
+            while (!br.readLine().equals("[General]")) {
                 //skip till preview
             }
-            fileScanner.nextLine();
-            fileScanner.nextLine();
-            String str = fileScanner.nextLine();
+            br.readLine();
+            br.readLine();
+            String str = br.readLine();
             String[] split = str.split(": ");
             previewPoint = Integer.parseInt(split[1]);
 
-            while (!fileScanner.nextLine().equals("[Metadata]")) {
+            while (!br.readLine().equals("[Metadata]")) {
                 //skip until metadata
             }
-            str = fileScanner.nextLine();
+            str = br.readLine();
             split = str.split(":");
             title = split[1];
-            fileScanner.nextLine();
+            br.readLine();
 
-            str = fileScanner.nextLine();
+            str = br.readLine();
             split = str.split(":");
             artist = split[1];
-            fileScanner.nextLine();
+            br.readLine();
 
-            str = fileScanner.nextLine();
+            str = br.readLine();
             split = str.split(":");
             mapper = split[1];
 
-            while (!fileScanner.nextLine().equals("[Difficulty]")) {
+            while (!br.readLine().equals("[Difficulty]")) {
                 //skip until sliderMult
             }
-            fileScanner.nextLine();
-            fileScanner.nextLine();
+            br.readLine();
+            br.readLine();
 
-            str = fileScanner.nextLine();
+            str = br.readLine();
             split = str.split(":");
             od = Double.parseDouble(split[1]);
-            fileScanner.nextLine();
+            br.readLine();
 
 
-            str = fileScanner.nextLine();
+            str = br.readLine();
             split = str.split(":");
             double sliderMult = Double.parseDouble(split[1]);
 
-            while (!fileScanner.nextLine().equals("[Events]")) {
+            while (!br.readLine().equals("[Events]")) {
                 //skip until bg offset
             }
-            fileScanner.nextLine();
-            str = fileScanner.nextLine();
+            br.readLine();
+            str = br.readLine();
             split = str.split(",");
             if (split.length == 3) {
-                str = fileScanner.nextLine();
+                str = br.readLine();
                 split = str.split(",");
             }
             yOffset = Integer.parseInt(split[4]);
 
-            while (!fileScanner.nextLine().equals("[TimingPoints]")) {
+            while (!br.readLine().equals("[TimingPoints]")) {
                 //skip until timingpoints
             }
 
             boolean hit = false;
 
             while (!hit) {
-                String data = fileScanner.nextLine();
+                String data = br.readLine();
                 if (data.isEmpty()) {
                     hit = true;
                 } else {
@@ -167,16 +178,17 @@ public class Song {
                 }
             }
 
-            fileScanner.nextLine();
-            fileScanner.nextLine();
+            br.readLine();
+            br.readLine();
 
-            while (fileScanner.hasNext()) {
-                String data = fileScanner.nextLine();
+            String data;
+            while ((data = br.readLine()) != null) {
                 String[] splitData = data.split(",");
                 double hitTime = Double.parseDouble(splitData[2]);
                 int color = Integer.parseInt(splitData[4]);
                 double velocity = 0;
                 boolean kiai = false;
+
                 for (int i = timeVelocity.size()-1; i >= 0; i--) {
                     Double[] arr = timeVelocity.get(i);
                     if (hitTime >= arr[0]) {
@@ -187,17 +199,29 @@ public class Song {
                         break;
                     }
                 }
-//                for (Double[] array : timeVelocity) {
-//                    if (hitTime >= array[0]) {
-//                        velocity = array[1];
+
+//                for (int i = 1; i < timeVelocity.size(); i++) {
+//                    Double[] before = timeVelocity.get(i-1);
+//                    Double[] after = timeVelocity.get(i);
+//                    if (hitTime < after[0]) {
+//                        velocity = before[1];
+//                        if (before[2] == 1) {
+//                            kiai = true;
+//                        }
+//                        break;
+//                    } else {
+//                        timeVelocity.remove(i-1);
+//                        i--;
 //                    }
 //                }
+
                 if (splitData.length == 6) {
                     chart.add(new Note(hitTime, color, velocity, kiai));
                 } else {
                     chart.add(new Spinner(hitTime, Integer.parseInt(splitData[5]), velocity, kiai));
                 }
             }
+            br.close();
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
         }

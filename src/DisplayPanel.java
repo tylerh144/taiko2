@@ -15,7 +15,8 @@ import java.util.ArrayList;
 public class DisplayPanel extends JPanel implements KeyListener, MouseListener, ActionListener, MouseWheelListener {
     private Timer timer;
     private double curTime, startTime, endTime, lastPauseTime;
-    private boolean isMenu, isEnd, isGame, paused, hidden;
+    private boolean isMenu, isEnd, isGame, paused, hidden, easy, flashlight;
+    private String activeMods;
     private boolean d1Down, d2Down, k1Down, k2Down;
     private ArrayList<Note> song;
     private Note currentNote;
@@ -28,7 +29,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
     private int spinnerVelocity, spinnerAngle, lastHit;
     private float d1a, d2a, k1a, k2a, goodA, missA;
     private double missY;
-    private Rectangle back, play, songArea, resume, toggleHidden, toggleEasy;
+    private Rectangle back, play, songArea, resume, toggleHD, toggleFL, toggleEZ;
     private ArrayList<Song> songList;
     private Song selectedSong;
 
@@ -40,12 +41,17 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
         isEnd = false;
 
         hidden = false;
+        easy = false;
+        flashlight = false;
+        activeMods = "";
 
         back = new Rectangle(25, 500, 250, 50);
         play = new Rectangle(700, 500, 250, 50);
         resume = new Rectangle(375, 165, 250, 50);
         songArea = new Rectangle(530, 50, 470, 450);
-        toggleHidden = new Rectangle(25, 500, 50, 50);
+        toggleHD = new Rectangle(25, 500, 50, 50);
+        toggleFL = new Rectangle(85, 500, 50, 50);
+        toggleEZ = new Rectangle(145, 500, 50, 50);
         songList = new ArrayList<>();
 
         File songFolder = new File("Songs");
@@ -107,15 +113,13 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
 
                             int x = (int) n.getxPos();
 
-                            if (hidden) {
-                                float alpha = 0;
-                                if (currentNote.isKiai()) {
-                                    alpha = (float) ((x - 400) / 350.0);
-                                } else {
-                                    alpha = (float) ((x - 500) / 250.0);
-                                }
+                            if (hidden && !(currentNote instanceof Spinner)) {
+                                float alpha = (float) ((x - 500) / 300.0);
                                 if (alpha <= 0) {
                                     alpha = 0;
+                                    if (currentNote.isKiai() && x > 300) {
+                                        alpha = 0.01f;
+                                    }
                                 } else if (alpha >= 1) {
                                     alpha = 1;
                                 }
@@ -156,9 +160,19 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                     }
                 }
             }
+            g.setColor(Color.BLACK);
             if (hidden) {
-                g.setColor(Color.BLACK);
-                g.fillRect(750, 100, 250, 150);
+                g.fillRect(800, 100, 250, 150);
+            }
+
+            int flx = 500;
+            if (combo >= 200) {
+                flx = 400;
+            } else if (combo >= 100) {
+                flx = 450;
+            }
+            if (flashlight) {
+                g.fillRect(flx, 100, 600, 150);
             }
 
             drawDrum(g);
@@ -167,7 +181,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             drawFade(g2d, missImg, missA, 132, (int) missY, 200, 200);
 
             if (paused) {
-                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .8f));
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .85f));
                 g.setColor(Color.BLACK);
                 g.fillRect(0, 0, 1000, 600);
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
@@ -220,31 +234,44 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.drawString("Back", 125, 532);
 
             if (hidden) {
-                g.setColor(Color.decode("#6200ff"));
-                g.fillRect(520, 440, 50, 50);
+                g.setColor(Color.decode("#c7ac00"));
+                g.fillRect(520, 430, 50, 50);
                 g.setColor(Color.WHITE);
-                g.drawRect(520, 440, 50, 50);
-                g.drawString("HD", 528, 472);
+                g.drawRect(520, 430, 50, 50);
+                g.drawString("HD", 529, 462);
+            }
+            if (flashlight) {
+                g.setColor(Color.GRAY);
+                g.fillRect(580, 430, 50, 50);
+                g.setColor(Color.WHITE);
+                g.drawRect(580, 430, 50, 50);
+                g.drawString("FL", 590, 462);
+            }
+            if (easy) {
+                g.setColor(Color.GREEN);
+                g.fillRect(640, 430, 50, 50);
+                g.setColor(Color.WHITE);
+                g.drawRect(640, 430, 50, 50);
+                g.drawString("EZ", 650, 462);
             }
 
-perf = 100;
             g.setFont(new Font("Arial", Font.BOLD, 300));
             String score;
             if (perf == selectedSong.getChart().size()) {
-                if (hidden) {
+                if (hidden || flashlight) {
                     g.setColor(Color.GRAY);
                 } else {
                     g.setColor(Color.decode("#dba400"));
                 }
                 g.drawString("S", 620, 380);
-                if (hidden) {
+                if (hidden || flashlight) {
                     g.setColor(Color.LIGHT_GRAY);
                 } else {
                     g.setColor(Color.ORANGE);
                 }
                 score = "S";
             } else if (miss == 0 && accuracy >= 95) {
-                if (hidden) {
+                if (hidden || flashlight) {
                     g.setColor(Color.LIGHT_GRAY);
                 } else {
                     g.setColor(Color.ORANGE);
@@ -317,10 +344,14 @@ perf = 100;
             g.drawString("Length: " + minutes + ":" + seconds + " Objects: " + selectedSong.getChart().size(), 10, 40);
 
             g.setFont(new Font("Arial Unicode MS", Font.PLAIN, 10));
-            g.drawString("OD: " + selectedSong.getOd() + " Star Rating: " + selectedSong.getStarRating() + "★", 10, 54);
+            double selOD = selectedSong.getOd();
+            if (easy) {
+                selOD /= 2;
+                g.setColor(Color.GREEN);
+            }
+            g.drawString("OD: " + selOD + " Star Rating: " + selectedSong.getStarRating() + "★", 10, 54);
 
-            //play
-            //maybe change play when user clicks on selected button
+
             g.setColor(Color.MAGENTA);
             g2d.fill(play);
             g.setColor(Color.WHITE);
@@ -328,11 +359,47 @@ perf = 100;
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString("Play", 800, 532);
 
+            activeMods = "";
+
             if (hidden) {
-                g.setColor(Color.decode("#6200ff"));
+                g.setColor(Color.decode("#c7ac00"));
+                if (activeMods.isEmpty()) {
+                    activeMods = "Hidden";
+                }
+            } else {
+                g.setColor(Color.WHITE);
             }
-            g2d.draw(toggleHidden);
-            g.drawString("HD", 33, 532);
+            g2d.draw(toggleHD);
+            g.drawString("HD", 34, 532);
+
+            if (flashlight) {
+                g.setColor(Color.GRAY);
+                if (activeMods.isEmpty()) {
+                    activeMods = "Flashlight";
+                } else {
+                    activeMods += ", Flashlight";
+                }
+            } else {
+                g.setColor(Color.WHITE);
+            }
+            g2d.draw(toggleFL);
+            g.drawString("FL", 94, 532);
+
+            if (easy) {
+                g.setColor(Color.GREEN);
+                if (activeMods.isEmpty()) {
+                    activeMods = "Easy";
+                } else {
+                    activeMods += ", Easy";
+                }
+            } else {
+                g.setColor(Color.WHITE);
+            }
+            g2d.draw(toggleEZ);
+            g.drawString("EZ", 155, 532);
+
+            g.setColor(Color.WHITE);
+            g.drawString(activeMods, 25, 475);
         }
 
 
@@ -445,8 +512,14 @@ perf = 100;
                         repaint();
                     }
                 }
-                if (toggleHidden.contains(location)) {
+                if (toggleHD.contains(location)) {
                     hidden = !hidden;
+                }
+                if (toggleEZ.contains(location)) {
+                    easy = !easy;
+                }
+                if (toggleFL.contains(location)) {
+                    flashlight = !flashlight;
                 }
             } else if (resume.contains(location) && paused) {
                 paused = false;
@@ -568,6 +641,9 @@ perf = 100;
         g.drawString("Accuracy: " + accuracy + "%", 200, 25);
         g.drawString("Max Combo: " + maxCombo + "x", 200, 50);
         g.drawString("Current Time: " + (int) curTime, 200, 75);
+        if (!activeMods.isEmpty()) {
+            g.drawString("Active Mods: " + activeMods, 400, 25);
+        }
 
         if (curTime > startTime) {
             g.setColor(Color.LIGHT_GRAY);
@@ -774,7 +850,11 @@ perf = 100;
         paused = false;
         lastPauseTime = -10000;
 
-        window = 50 -  3 * selectedSong.getOd();
+        if (easy) {
+            window = 50 - 1.5 * selectedSong.getOd();
+        } else {
+            window = 50 - 3 * selectedSong.getOd();
+        }
 
         if (audio != null && audio.isOpen()) {
             audio.stop();

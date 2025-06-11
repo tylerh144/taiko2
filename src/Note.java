@@ -12,9 +12,9 @@ public class Note {
     private BufferedImage img, img1;
 
     public Note(double hitTime, int color, double velocity, boolean kiai) {
+        this.velocity = velocity * .004 / 1.4;
         this.hitTime = hitTime;
-        spawnTime = hitTime - 224000.0 / velocity;
-        this.velocity = velocity * .005 / 1.4;
+        spawnTime = hitTime - 800 / this.velocity;
         this.kiai = kiai;
 
         if (color == 0) {
