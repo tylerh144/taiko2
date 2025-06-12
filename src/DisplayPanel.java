@@ -186,7 +186,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.setColor(Color.RED);
             if (earlyLate.equals("Early")) {
                 x = 260;
-                g.setColor(Color.BLUE);
+                g.setColor(Color.decode("#0091ff"));
             }
             if (goodA > .05) {
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .5f));
@@ -195,6 +195,12 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                 g.setColor(Color.WHITE);
                 g.setFont(new Font("Arial", Font.BOLD, 16));
                 g.drawString(earlyLate, x, 120);
+            }
+
+            if (curTime < startTime - 500) {
+                g.setColor(Color.WHITE);
+                g.setFont(new Font("Arial", Font.BOLD, 30));
+                g.drawString("Skip", 900, 540);
             }
 
             if (paused) {
@@ -219,7 +225,7 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .3f));
             g2d.fillRect(0, 0, 1000, 600);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .5f));
-            g2d.fillRect(25, 100, 250, 280);
+            g2d.fillRect(25, 100, 250, 290);
             g2d.fillRect(500, 100, 400, 400);
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 
@@ -232,9 +238,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.drawString("Beatmap by " + selectedSong.getMapper(), 20, 50);
 
             g.setColor(Color.RED);
-            g.drawString("Late: " + late, 50, 205);
-            g.setColor(Color.BLUE);
-            g.drawString("Early: " + early, 150, 205);
+            g.drawString("Late: " + late, 50, 220);
+            g.setColor(Color.decode("#0091ff"));
+            g.drawString("Early: " + early, 50, 200);
 
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.setColor(Color.CYAN);
@@ -242,18 +248,18 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
             g.setColor(Color.MAGENTA);
             g.drawString("Good: " + good, 50, 180);
             g.setColor(Color.LIGHT_GRAY);
-            g.drawString("Miss: " + miss, 50, 240);
+            g.drawString("Miss: " + miss, 50, 250);
             g.setColor(Color.WHITE);
-            g.drawString("Max Combo: " + maxCombo + "x", 50, 280);
-            g.drawString("Accuracy: " + accuracy + "%", 50, 320);
+            g.drawString("Max Combo: " + maxCombo + "x", 50, 290);
+            g.drawString("Accuracy: " + accuracy + "%", 50, 330);
 
 
             if (perf == selectedSong.getChart().size()) {
                 g.setColor(Color.CYAN);
-                g.drawString("ALL PERFECT", 50, 360);
+                g.drawString("ALL PERFECT", 50, 370);
             } else if (miss == 0) {
                 g.setColor(Color.MAGENTA);
-                g.drawString("FULL COMBO", 50, 360);
+                g.drawString("FULL COMBO", 50, 370);
             }
 
             g.setColor(Color.BLACK);
@@ -475,6 +481,9 @@ public class DisplayPanel extends JPanel implements KeyListener, MouseListener, 
                         back.setLocation(375, 365);
                         play.setLocation(375, 265);
                     }
+                } else if (key == KeyEvent.VK_SPACE && curTime < startTime - 500) {
+                    curTime = startTime-500;
+                    audio.setMicrosecondPosition((long) (curTime * 1000));
                 }
             }
         }
